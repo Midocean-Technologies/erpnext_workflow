@@ -78,6 +78,7 @@ app_license = "mit"
 # 	"methods": "erpnext_workflow.utils.jinja_methods",
 # 	"filters": "erpnext_workflow.utils.jinja_filters"
 # }
+after_migrate = "erpnext_workflow.install.after_install"
 
 # Installation
 # ------------

@@ -9,12 +9,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 def gen_response(status, message, data=[]):
     frappe.response["http_status_code"] = status
-    if status == 500:
-        frappe.response["execption"] = BeautifulSoup(str(message), "lxml").get_text()
-    else:
-        frappe.response["message"] = message
+    frappe.response["message"] = BeautifulSoup(str(message), "lxml").get_text()
     frappe.response["data"] = data
-
 
 def exception_handler(e):
     frappe.log_error(title="ESS Mobile App Error", message=frappe.get_traceback())

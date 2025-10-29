@@ -3,13 +3,11 @@ from frappe.auth import LoginManager
 from frappe import _
 from erpnext_workflow.mobile_api.v1.api_utils import * 
 from frappe.model.workflow import get_transitions, get_workflow, apply_workflow
-# from frappe.workflow.doctype.workflow_action.workflow_action import confirm_action, apply_action
 
 
 @frappe.whitelist(allow_guest=True)
-def login(usr, pwd, firebase_token=None):
+def login(usr, pwd):
     try:
-        # Authenticate user
         login_manager = LoginManager()
         login_manager.authenticate(usr, pwd)
         login_manager.post_login()
@@ -17,32 +15,25 @@ def login(usr, pwd, firebase_token=None):
         if frappe.response.get("message") == "Logged In":
             user = login_manager.user
 
-            # installed_apps = frappe.get_installed_apps()
-            # if "erpnext_workflow" not in installed_apps:
-            #     return gen_response(500, "The ERPNext Workflow app is not installed on this site. Please contact the Administrator.")
-
-            settings = frappe.get_single("Smart Workflow Settings")
+            try:
+                settings = frappe.get_single("Smart Workflow Settings")
+            except frappe.DoesNotExistError:
+                return gen_response(500, "User has no permission for mobile app, please contact Admin")
 
             if not settings.enabled:
                 return gen_response(500, "User has no permission for mobile app, please contact Admin")
 
-            if firebase_token:
-                if not settings.firebase_token:
-                    return gen_response(500, "Firebase token not found, please contact Admin")
-                if firebase_token != settings.firebase_token:
-                    return gen_response(500, "Invalid Firebase token")
-
-            frappe.response["user"] = user
-            frappe.response["key_details"] = generate_key(user)
-
-            return gen_response(200, frappe.response["message"])
+            return gen_response(200, "Logged In", {"user": user})
 
         return gen_response(500, "Login failed")
 
     except frappe.AuthenticationError:
-        return gen_response(500, frappe.response.get("message", "Invalid username or password"))
+        return gen_response(500, "Invalid username or password")
+
     except Exception as e:
-        return exception_handler(e)
+        clean_msg = BeautifulSoup(str(e), "lxml").get_text()
+        return gen_response(500, clean_msg)
+
 
 @frappe.whitelist()
 @mtpl_validate(methods=["GET"])
@@ -157,3 +148,13 @@ def update_workflow(reference_doctype, reference_name, action):
         return gen_response(500, "Not permitted")
     except Exception as e:
         return exception_handler(e)
+
+@frappe.whitelist()
+def store_fcm_token(user, token):
+    try:
+        doc = frappe.get_doc('User', user)
+        doc.db_set('user_fcm_token', token)
+        frappe.db.commit()
+        return doc
+    except Exception as e:
+        raise e
