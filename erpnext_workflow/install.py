@@ -5,6 +5,7 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 @frappe.whitelist()
 def after_install():
     create_custom_fields()
+    execute()
 
 def create_custom_fields():
     create_custom_field(
@@ -26,3 +27,45 @@ def create_custom_fields():
             "insert_after": "time_zone",
         },
     )
+
+
+def execute():
+    TITLE_FIELD_MAP = {
+        # Sales Module
+        "Sales Order": "customer",
+        "Sales Invoice": "customer",
+        "Delivery Note": "customer",
+
+        # Purchase Module
+        "Purchase Order": "supplier",
+        "Purchase Invoice": "supplier",
+        "Purchase Receipt": "supplier",
+
+        # CRM / Core
+        "Customer": "customer_name",
+        "Supplier": "supplier_name",
+        "Quotation": "party_name",
+        "Lead": "lead_name",
+
+        # Accounting
+        "Payment Entry": "party",
+
+        # Stock / Quality
+        "Material Request": "material_request_type",
+        "Stock Entry": "stock_entry_type",
+        "Quality Inspection": "item_code",
+
+        # HR
+        "Employee": "employee_name",
+    }
+
+    doc = frappe.get_single("Smart Workflow Settings")
+    existing = [d.reference_doctype for d in doc.title_fields]
+
+    for doctype, fieldname in TITLE_FIELD_MAP.items():
+        if doctype not in existing:
+            row = doc.append("title_fields", {})
+            row.reference_doctype = doctype
+            row.title_field_name = fieldname
+
+    doc.save(ignore_permissions=True)

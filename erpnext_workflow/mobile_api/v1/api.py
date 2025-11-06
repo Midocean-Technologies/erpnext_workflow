@@ -3,7 +3,7 @@ from frappe.auth import LoginManager
 from frappe import _
 from erpnext_workflow.mobile_api.v1.api_utils import * 
 from frappe.model.workflow import get_transitions, get_workflow, apply_workflow
-
+import re
 
 @frappe.whitelist(allow_guest=True)
 def login(usr, pwd):
@@ -51,24 +51,47 @@ def get_document_type_list(user=None):
 def get_document_list(reference_doctype, user=None):
     try:
         lst = []
-	
-        document_list = frappe.get_list('Workflow Action', filters={'status': 'Open', 'reference_doctype': reference_doctype}, fields=['name', 'reference_name', 'reference_doctype'])
+
+        settings = frappe.get_single("Smart Workflow Settings")
+
+        title_map = {}
+        for row in settings.title_fields:
+            title_map[row.reference_doctype] = row.title_field_name
+
+        document_list = frappe.get_list(
+            "Workflow Action",
+            filters={"status": "Open", "reference_doctype": reference_doctype},
+            fields=["name", "reference_name", "reference_doctype"]
+        )
+
         for row in document_list:
-            docc = {}
             if frappe.db.exists(row.reference_doctype, row.reference_name):
+
                 doc = frappe.get_doc(row.reference_doctype, row.reference_name)
-                docc['reference_doctype'] = row.reference_doctype
-                docc['reference_name'] = row.reference_name
-                docc['workflow_state'] = doc.workflow_state
-                docc['title'] = doc.title
-                docc['status'] = get_status(doc.docstatus)
-                lst.append(docc)
-        gen_response(200 ,"Data Fetch Succesfully", lst)
+                info = {}
+
+                info["reference_doctype"] = row.reference_doctype
+                info["reference_name"] = row.reference_name
+                info["workflow_state"] = getattr(doc, "workflow_state", "")
+
+                title_field = title_map.get(row.reference_doctype)
+
+                if title_field and hasattr(doc, title_field):
+                    info["title"] = getattr(doc, title_field)
+                else:
+                    info["title"] = ""
+
+                info["status"] = get_status(doc.docstatus)
+
+                lst.append(info)
+
+        return gen_response(200, "Data Fetched Successfully", lst)
+
     except frappe.PermissionError:
         return gen_response(500, "Not permitted")
+
     except Exception as e:
         return exception_handler(e)
-    
 
 def get_status(status):
 	if status == 0:
@@ -106,19 +129,32 @@ def get_document_list_5_record(user=None):
 
 @frappe.whitelist()
 @mtpl_validate(methods=["GET"])
-def get_print_format(reference_doctype, reference_name):
+def get_print_format(reference_doctype, reference_name, print_format_name=None):
     try:
-        print_format = "Standard"
-        smart_setting = frappe.get_single("Smart Connect Setting")
-        if smart_setting.print_format:
-            for i in smart_setting.print_format:
-                if i.doctype_name == reference_doctype:
-                    print_format = i.print_format
+        if not print_format_name:
+            print_format_name = "Standard"
 
-        data = frappe.get_print(doctype=reference_doctype, name=reference_name, print_format=print_format)
-        gen_response(200 ,"Data Fetch Succesfully", data)
+        res = frappe.get_print(
+            doctype=reference_doctype,
+            name=reference_name,
+            print_format=print_format_name
+        )
+
+        # Remove unwanted sections using regex
+        unwanted_patterns = [
+            r'@page {\n\s+margin-top: 40mm;\n\s+margin-bottom: 30mm;\n\s+}',
+            r'<style>.*?</style>',
+            r'<div class="action-banner print-hide">.*?</div>'
+        ]
+
+        for pattern in unwanted_patterns:
+            res = re.sub(pattern, '', res, flags=re.DOTALL)
+
+        return gen_response(200, "Data Fetched Successfully", res)
+
     except frappe.PermissionError:
-        return gen_response(500, "Not permitted")
+        return gen_response(403, "Not permitted")
+
     except Exception as e:
         return exception_handler(e)
     
