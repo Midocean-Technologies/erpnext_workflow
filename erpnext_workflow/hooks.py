@@ -145,6 +145,14 @@ after_migrate = "erpnext_workflow.install.after_install"
 # 		"on_trash": "method"
 # 	}
 # }
+# hooks.py
+
+doc_events = {
+    "Sales Order": {
+        "on_update": "erpnext_workflow.mobile_api.v1.api.trigger_workflow_notification"
+
+    }
+}
 
 # Scheduled Tasks
 # ---------------
