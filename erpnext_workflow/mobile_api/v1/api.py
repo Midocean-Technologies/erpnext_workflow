@@ -214,6 +214,7 @@ def get_print_format(reference_doctype, reference_name, print_format_name=None):
 @frappe.whitelist()
 @mtpl_validate(methods=["POST"])
 def trigger_workflow_notification(doc, method):
+
     previous = doc.get_doc_before_save()
     old_state = previous.workflow_state if previous else None
     new_state = doc.workflow_state
@@ -224,56 +225,74 @@ def trigger_workflow_notification(doc, method):
     if old_state == new_state:
         return {"status": "No change"}
 
+
     workflow_name = frappe.db.get_value(
         "Workflow",
         {"document_type": doc.doctype, "is_active": 1},
         "name"
     )
+    
     if not workflow_name:
         return {"status": "No active workflow"}
+
 
     current_role = frappe.db.get_value(
         "Workflow Document State",
         {"parent": workflow_name, "state": new_state},
         "allow_edit"
     )
+
+   
     if not current_role:
         return {"status": "No role for this state"}
+
 
     users = frappe.db.get_all(
         "Has Role",
         filters={"role": current_role},
         fields=["parent as user"]
     )
-    
+
+    print("**************",users)
+
     enabled_users = [
         u.user for u in users
         if frappe.db.get_value("User", u.user, "enabled")
     ]
 
-    transitions = frappe.get_all(
-        "Workflow Transition",
-        filters={"parent": workflow_name, "state": doc.workflow_state},
-        fields=["action"]
+    print("&&&&&&&&&&&&&&&&&&&&&&&&&",enabled_users)
+
+
+    workflow_name = frappe.db.get_value(
+        "Workflow",
+        {"document_type": doc.doctype, "is_active": 1},
+        "name"
     )
-    actions_set = [t["action"] for t in transitions]
+
+    actions_list = []
+
+    if workflow_name:
+        transitions = frappe.get_all(
+            "Workflow Transition",
+            filters={"parent": workflow_name, "state": doc.workflow_state},
+            fields=["action"]
+        )
+
+        actions_list = [{"action": t["action"]} for t in transitions]
 
     message = {
         "doctype": doc.doctype,
         "docname": doc.name,
-        "msg": new_state,
-        "actions": actions_set,
+        "msg": new_state,       
+        "actions": actions_list,
     }
 
-    frappe.log_error("Workflow Notification", str(message))
-
+    frappe.log_error("Workflow Notification", message)
 
     for user in enabled_users:
         frappe.publish_realtime(
-            event="erp_notification",
-            message=message,
-            user=user,
-            after_commit=True  
+            "erp_notification",
+            message,
         )
 
     return {
@@ -282,8 +301,6 @@ def trigger_workflow_notification(doc, method):
         "role": current_role,
         "users": enabled_users
     }
-
-
 
 @frappe.whitelist()
 @mtpl_validate(methods=["POST"])
