@@ -2,9 +2,7 @@ import frappe
 from frappe import _
 from frappe.email.doctype.email_template.email_template import get_email_template
 from frappe.model.document import Document
-from frappe.workflow.doctype.workflow_action.workflow_action import (
-    send_email_alert,
-)
+from frappe.workflow.doctype.workflow_action.workflow_action import WorkflowAction
 
 class CustomWorkflowAction(WorkflowAction):
 
