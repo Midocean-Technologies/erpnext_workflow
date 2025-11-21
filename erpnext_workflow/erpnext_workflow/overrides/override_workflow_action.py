@@ -49,11 +49,7 @@ def process_workflow_actions(doc, state):
 
     send_mobile_app_notification= frappe.db.get_value('Workflow',workflow_name,'send_mobile_app_notification')
     
-    if send_mobile_app_notification and frappe.db.get_value(
-        "Workflow Document State",
-        filters={"parent": workflow, "state": get_doc_workflow_state(doc)},
-        fieldname="send_email",
-    ):
+    if send_mobile_app_notification:
         message = {
             "doctype": workflow_name,
             "docname": doc.name,
