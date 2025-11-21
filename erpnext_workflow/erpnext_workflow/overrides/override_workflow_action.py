@@ -9,7 +9,7 @@ from frappe.workflow.doctype.workflow_action.workflow_action import *
 
 
 def process_workflow_actions(doc, state):
-    print("************method calling****************")
+    # print("************method calling****************")
     workflow = get_workflow_name(doc.get("doctype"))
     if not workflow:
         return
