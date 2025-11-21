@@ -61,6 +61,10 @@ def process_workflow_actions(doc, state):
             "actions" : [{"action": t.action} for t in next_possible_transitions],
         }
         frappe.log_error("Workflow Notification", message)
+        try:
+            # frappe.publish_realtime("erp_notification", message)
+            frappe.publish_realtime("erp_notification", {"msg": message})
 
-        frappe.publish_realtime("erp_notification", message)
+        except Exception as e:
+            frappe.log_error(f"Failed to send workflow notification for {doc.doctype} {doc.name}", str(e))
 
