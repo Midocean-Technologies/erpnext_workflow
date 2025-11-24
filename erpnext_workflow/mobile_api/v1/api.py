@@ -293,6 +293,7 @@ def trigger_workflow_notification(doc, method):
         "docname": doc.name,
         "msg": new_state,
         "actions": actions_list,
+        "user": enabled_users
     }
     
     frappe.log_error("Workflow Notification", message)

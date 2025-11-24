@@ -9,55 +9,55 @@ from frappe.workflow.doctype.workflow_action.workflow_action import *
 
 def process_workflow_actions(doc, state):
     pass
-    # workflow = get_workflow_name(doc.get("doctype"))
-    # if not workflow:
-    #     return
+    workflow = get_workflow_name(doc.get("doctype"))
+    if not workflow:
+        return
 
-    # if state == "on_trash":
-    #     clear_workflow_actions(doc.get("doctype"), doc.get("name"))
-    #     return
+    if state == "on_trash":
+        clear_workflow_actions(doc.get("doctype"), doc.get("name"))
+        return
 
-    # if is_workflow_action_already_created(doc):
-    #     return
+    if is_workflow_action_already_created(doc):
+        return
 
-    # update_completed_workflow_actions(doc, workflow=workflow, workflow_state=get_doc_workflow_state(doc))
-    # clear_doctype_notifications("Workflow Action")
+    update_completed_workflow_actions(doc, workflow=workflow, workflow_state=get_doc_workflow_state(doc))
+    clear_doctype_notifications("Workflow Action")
 
-    # next_possible_transitions = get_next_possible_transitions(workflow, get_doc_workflow_state(doc), doc)
+    next_possible_transitions = get_next_possible_transitions(workflow, get_doc_workflow_state(doc), doc)
 
-    # if not next_possible_transitions:
-    #     return
+    if not next_possible_transitions:
+        return
 
-    # roles = {t.allowed for t in next_possible_transitions}
-    # create_workflow_actions_for_roles(roles, doc)
+    roles = {t.allowed for t in next_possible_transitions}
+    create_workflow_actions_for_roles(roles, doc)
 
-    # if send_email_alert(workflow):
-    #     enqueue(
-    #         send_workflow_action_email,
-    #         queue="short",
-    #         doc=doc,
-    #         transitions=next_possible_transitions,
-    #         enqueue_after_commit=True,
-    #         now=frappe.flags.in_test,
-    #     )
+    if send_email_alert(workflow):
+        enqueue(
+            send_workflow_action_email,
+            queue="short",
+            doc=doc,
+            transitions=next_possible_transitions,
+            enqueue_after_commit=True,
+            now=frappe.flags.in_test,
+        )
 
-    # workflow_name = get_workflow_name(doc.get("doctype"))
+    workflow_name = get_workflow_name(doc.get("doctype"))
 
-    # send_mobile_app_notification = frappe.db.get_value('Workflow', workflow_name, 'send_mobile_app_notification')
+    send_mobile_app_notification = frappe.db.get_value('Workflow', workflow_name, 'send_mobile_app_notification')
 
-    # if send_mobile_app_notification:
-    #     message = {
-    #         "doctype": doc.doctype,
-    #         "docname": doc.name,
-    #         "msg": doc.workflow_state,  
-    #         "actions": [{"action": t.action} for t in next_possible_transitions],  
-    #     }
+    if send_mobile_app_notification:
+        message = {
+            "doctype": doc.doctype,
+            "docname": doc.name,
+            "msg": doc.workflow_state,  
+            "actions": [{"action": t.action} for t in next_possible_transitions],  
+        }
         
-    #     frappe.log_error("Workflow Notification", message)
+        frappe.log_error("Workflow Notification", message)
 
-    #     try:
-    #         frappe.publish_realtime("erp_notification", message)
-    #         print("erp_notification", message)
+        try:
+            frappe.publish_realtime("erp_notification", message)
+            print("erp_notification", message)
 
-    #     except Exception as e:
-    #         frappe.log_error(f"Failed to send workflow notification for {doc.doctype} {doc.name}", str(e))
+        except Exception as e:
+            frappe.log_error(f"Failed to send workflow notification for {doc.doctype} {doc.name}", str(e))
