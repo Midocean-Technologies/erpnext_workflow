@@ -215,55 +215,57 @@ def get_print_format(reference_doctype, reference_name, print_format_name=None):
 @mtpl_validate(methods=["POST"])
 def trigger_workflow_notification(doc, method):
 
-    if not hasattr(doc, 'workflow_state') or not doc.workflow_state:
-        return
-    previous = doc.get_doc_before_save()
-    old_state = previous.workflow_state if previous else None
-    new_state = doc.workflow_state
-    
-    if old_state == new_state:
-        return
-    
     workflow_name = frappe.db.get_value(
         "Workflow",
         {"document_type": doc.doctype, "is_active": 1},
         "name"
     )
-    
     if not workflow_name:
         return
-    
+
+    workflow_state_field = frappe.db.get_value(
+        "Workflow",
+        workflow_name,
+        "workflow_state_field"
+    )
+    if not workflow_state_field:
+        return
+
+    new_state = doc.get(workflow_state_field)
+
+    previous = doc.get_doc_before_save()
+    old_state = previous.get(workflow_state_field) if previous else None
+
+    if not new_state or old_state == new_state:
+        return
+
     current_role = frappe.db.get_value(
         "Workflow Document State",
         {"parent": workflow_name, "state": new_state},
         "allow_edit"
     )
-    
     if not current_role:
         return
-    
+
     users = frappe.db.get_all(
         "Has Role",
         filters={"role": current_role},
         fields=["parent as user"]
     )
-    
     enabled_users = [
         u.user for u in users
         if frappe.db.get_value("User", u.user, "enabled")
     ]
-    
     if not enabled_users:
         return
-    
+
     transitions = frappe.get_all(
         "Workflow Transition",
         filters={"parent": workflow_name, "state": new_state},
         fields=["action"]
     )
-    
     actions_list = [{"action": t["action"]} for t in transitions]
-    
+
     message = {
         "doctype": doc.doctype,
         "docname": doc.name,
@@ -274,6 +276,7 @@ def trigger_workflow_notification(doc, method):
 
     for user in enabled_users:
         frappe.publish_realtime("erp_notification", message, user=user)
+
 
 
 @frappe.whitelist()
