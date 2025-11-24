@@ -7,9 +7,7 @@ from frappe.workflow.doctype.workflow_action.workflow_action import *
 
 # class CustomWorkflowAction(WorkflowAction):
 
-
 def process_workflow_actions(doc, state):
-    # print("************method calling****************")
     workflow = get_workflow_name(doc.get("doctype"))
     if not workflow:
         return
@@ -41,22 +39,24 @@ def process_workflow_actions(doc, state):
             enqueue_after_commit=True,
             now=frappe.flags.in_test,
         )
+
     workflow_name = get_workflow_name(doc.get("doctype"))
 
-    send_mobile_app_notification= frappe.db.get_value('Workflow',workflow_name,'send_mobile_app_notification')
-    
+    send_mobile_app_notification = frappe.db.get_value('Workflow', workflow_name, 'send_mobile_app_notification')
+
     if send_mobile_app_notification:
         message = {
-            "doctype": workflow_name,
+            "doctype": doc.doctype,
             "docname": doc.name,
-            "msg": doc.workflow_state,
-            "actions" : [{"action": t.action} for t in next_possible_transitions],
+            "msg": doc.workflow_state,  
+            "actions": [{"action": t.action} for t in next_possible_transitions],  
         }
+        
         frappe.log_error("Workflow Notification", message)
+
         try:
-            # frappe.publish_realtime("erp_notification", message)
-            frappe.publish_realtime("erp_notification", {"msg": message})
+            frappe.publish_realtime("erp_notification", message)
+            print("erp_notification", message)
 
         except Exception as e:
             frappe.log_error(f"Failed to send workflow notification for {doc.doctype} {doc.name}", str(e))
-
