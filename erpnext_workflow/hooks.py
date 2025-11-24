@@ -148,9 +148,11 @@ after_migrate = "erpnext_workflow.install.after_install"
 # hooks.py
 # hooks.py
 
-# override_doctype_class = {
-#     "Workflow Action": "erpnext_workflow.erpnext_workflow.overrides.workflow_action.CustomWorkflowAction"
-# }
+doc_events = {
+    "*": {
+        "on_update": "erpnext_workflow.overrides.override_workflow_action.process_workflow_actions"
+    }
+}
 
 # Scheduled Tasks
 # ---------------
