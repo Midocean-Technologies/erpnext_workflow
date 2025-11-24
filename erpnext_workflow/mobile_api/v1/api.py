@@ -233,3 +233,76 @@ def store_fcm_token(user, token):
         return doc
     except Exception as e:
         raise e
+
+@frappe.whitelist()
+@mtpl_validate(methods=["POST"])
+def trigger_workflow_notification(doc, method):
+
+    if not hasattr(doc, 'workflow_state') or not doc.workflow_state:
+        return
+
+    previous = doc.get_doc_before_save()
+    old_state = previous.workflow_state if previous else None
+    new_state = doc.workflow_state
+    
+    if old_state == new_state:
+        return
+    
+    workflow_name = frappe.db.get_value(
+        "Workflow",
+        {"document_type": doc.doctype, "is_active": 1},
+        "name"
+    )
+    
+    if not workflow_name:
+        return
+    
+    current_role = frappe.db.get_value(
+        "Workflow Document State",
+        {"parent": workflow_name, "state": new_state},
+        "allow_edit"
+    )
+    
+    if not current_role:
+        return
+    
+    users = frappe.db.get_all(
+        "Has Role",
+        filters={"role": current_role},
+        fields=["parent as user"]
+    )
+    
+    enabled_users = [
+        u.user for u in users
+        if frappe.db.get_value("User", u.user, "enabled")
+    ]
+    
+    if not enabled_users:
+        return
+    
+    transitions = frappe.get_all(
+        "Workflow Transition",
+        filters={"parent": workflow_name, "state": new_state},
+        fields=["action"]
+    )
+    
+    actions_list = [{"action": t["action"]} for t in transitions]
+    
+    message = {
+        "doctype": doc.doctype,
+        "docname": doc.name,
+        "msg": new_state,
+        "actions": actions_list,
+    }
+    
+    frappe.log_error("Workflow Notification", message)
+
+    for user in enabled_users:
+        frappe.publish_realtime("erp_notification", message, user=user)
+
+    workflow_state_filter = frappe.form_dict.get("workflow_state")
+
+    if workflow_state_filter:
+        if doc.workflow_state != workflow_state_filter:
+            frappe.throw(_("The workflow state does not match the filter."))
+
