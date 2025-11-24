@@ -147,10 +147,9 @@ after_migrate = "erpnext_workflow.install.after_install"
 # }
 # hooks.py
 # hooks.py
-
 doc_events = {
     "*": {
-        "on_update": "erpnext_workflow.overrides.override_workflow_action.process_workflow_actions"
+        "on_update": "erpnext_workflow.mobile_api.v1.api.trigger_workflow_notification"
     }
 }
 
