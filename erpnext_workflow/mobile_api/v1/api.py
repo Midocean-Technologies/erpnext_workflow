@@ -298,10 +298,4 @@ def trigger_workflow_notification(doc, method):
     frappe.log_error("Workflow Notification", message)
 
     for user in enabled_users:
-        frappe.publish_realtime(
-            event="erp_notification",
-            message=message,
-            user=user
-        )
-
-
+        frappe.publish_realtime("erp_notification", message, user=user)
