@@ -5,6 +5,8 @@ from erpnext_workflow.mobile_api.v1.api_utils import *
 from frappe.model.workflow import get_transitions, get_workflow, apply_workflow
 import re
 from frappe.utils.user import get_users_with_role
+def get_frappe_version() -> str:
+    return getattr(frappe, "__version__", "unknown")
 
 @frappe.whitelist(allow_guest=True)
 def login(usr, pwd):
@@ -24,7 +26,7 @@ def login(usr, pwd):
             if not settings.enabled:
                 return gen_response(500, "User has no permission for mobile app, please contact Admin")
 
-            return gen_response(200, "Logged In", {"user": user})
+            return gen_response(200, "Logged In", {"user": user,"frappe_version" : frappe_version})
 
         return gen_response(500, "Login failed")
 
