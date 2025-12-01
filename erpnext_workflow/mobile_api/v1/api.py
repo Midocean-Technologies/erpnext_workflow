@@ -14,7 +14,7 @@ def login(usr, pwd):
         login_manager = LoginManager()
         login_manager.authenticate(usr, pwd)
         login_manager.post_login()
-		frappe_version = get_frappe_version()
+        frappe_version = get_frappe_version()
 
         if frappe.response.get("message") == "Logged In":
             user = login_manager.user
@@ -216,6 +216,29 @@ def get_print_format(reference_doctype, reference_name, print_format_name=None):
 
 @frappe.whitelist()
 @mtpl_validate(methods=["POST"])
+def update_workflow(reference_doctype, reference_name, action):
+    try:
+        # doc = get_doc_details(reference_doctype, reference_name)
+        doc = frappe.get_doc(reference_doctype, reference_name)
+        apply_workflow(doc, action)
+        gen_response(200 ,"Workflow Updated")
+    except frappe.PermissionError:
+        return gen_response(500, "Not permitted")
+    except Exception as e:
+        return exception_handler(e)
+
+@frappe.whitelist()
+def store_fcm_token(user, token):
+    try:
+        doc = frappe.get_doc('User', user)
+        doc.db_set('user_fcm_token', token)
+        frappe.db.commit()
+        return doc
+    except Exception as e:
+        raise e
+
+@frappe.whitelist()
+@mtpl_validate(methods=["POST"])
 def trigger_workflow_notification(doc, method):
 
     workflow_name = frappe.db.get_value(
@@ -279,28 +302,3 @@ def trigger_workflow_notification(doc, method):
 
     for user in enabled_users:
         frappe.publish_realtime("erp_notification", message, user=user)
-
-
-
-@frappe.whitelist()
-@mtpl_validate(methods=["POST"])
-def update_workflow(reference_doctype, reference_name, action):
-    try:
-        # doc = get_doc_details(reference_doctype, reference_name)
-        doc = frappe.get_doc(reference_doctype, reference_name)
-        apply_workflow(doc, action)
-        gen_response(200 ,"Workflow Updated")
-    except frappe.PermissionError:
-        return gen_response(500, "Not permitted")
-    except Exception as e:
-        return exception_handler(e)
-
-@frappe.whitelist()
-def store_fcm_token(user, token):
-    try:
-        doc = frappe.get_doc('User', user)
-        doc.db_set('user_fcm_token', token)
-        frappe.db.commit()
-        return doc
-    except Exception as e:
-        raise e
