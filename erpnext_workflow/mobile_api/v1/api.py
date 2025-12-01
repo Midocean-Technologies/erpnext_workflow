@@ -14,6 +14,7 @@ def login(usr, pwd):
         login_manager = LoginManager()
         login_manager.authenticate(usr, pwd)
         login_manager.post_login()
+        frappe_version = get_frappe_version()
 
         if frappe.response.get("message") == "Logged In":
             user = login_manager.user
