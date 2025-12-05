@@ -107,17 +107,31 @@ def get_current_workflow_state(doc):
     if hasattr(doc, "workflow_state") and doc.workflow_state:
         return doc.workflow_state
 
-    state = frappe.db.get_value(
+    open_state = frappe.db.get_value(
+        "Workflow Action",
+        {
+            "reference_doctype": doc.doctype,
+            "reference_name": doc.name,
+            "status": "Open"
+        },
+        "workflow_state"
+    )
+    if open_state:
+        return open_state
+
+    closed_state = frappe.db.get_value(
         "Workflow Action",
         {
             "reference_doctype": doc.doctype,
             "reference_name": doc.name,
             "status": ("in", ["Approved", "Pending", "Completed"])
         },
-        "workflow_state"
+        "workflow_state",
+        order_by="creation desc"
     )
+    
+    return closed_state
 
-    return state
 
 
 def get_status(status):
