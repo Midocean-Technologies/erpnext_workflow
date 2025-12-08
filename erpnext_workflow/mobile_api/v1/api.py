@@ -171,10 +171,17 @@ def get_workflow_action(reference_doctype, reference_name):
 
 @frappe.whitelist()
 @mtpl_validate(methods=["GET"])
-def get_print_format(reference_doctype, reference_name, print_format_name=None):
+def get_print_format(reference_doctype, reference_name):
     try:
-        if not print_format_name:
-            print_format_name = "Standard"
+        print_format_name = "Standard"
+        workflow_list = frappe.get_all("Workflow",filters={'document_type': reference_doctype, 'is_active': 1}, fields=['print_format'])
+        for i in workflow_list:
+            if i.print_format:
+                print_format_name = i.print_format
+        print("............",workflow_list)
+        
+        # if not print_format_name:
+        #     print_format_name = "Standard"
         
         res = frappe.get_print(
             doctype=reference_doctype,
