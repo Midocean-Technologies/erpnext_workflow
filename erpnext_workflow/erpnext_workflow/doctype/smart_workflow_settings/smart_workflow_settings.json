@@ -33,7 +33,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-11-06 12:17:21.441803",
+ "modified": "2025-12-04 12:36:35.218270",
  "modified_by": "Administrator",
  "module": "Erpnext Workflow",
  "name": "Smart Workflow Settings",
@@ -54,6 +54,5 @@
  "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": [],
- "track_views": 1
+ "states": []
 }

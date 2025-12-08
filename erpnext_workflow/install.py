@@ -37,6 +37,16 @@ def create_custom_fields():
             "insert_after": "send_email_alert",
         },
     )
+    create_custom_field(
+        "Workflow",
+        {
+            "label": _("Print Format"),
+            "fieldname": "print_format",
+            "fieldtype": "Link",
+            "options": "Print Format",
+            "insert_after": "workflow_state_field",
+        },
+    )
 
 
 def execute():

@@ -5,6 +5,8 @@ from erpnext_workflow.mobile_api.v1.api_utils import *
 from frappe.model.workflow import get_transitions, get_workflow, apply_workflow
 import re
 from frappe.utils.user import get_users_with_role
+
+
 def get_frappe_version() -> str:
     return getattr(frappe, "__version__", "unknown")
 
@@ -50,6 +52,8 @@ def get_document_type_list(user=None):
     except Exception as e:
         return exception_handler(e)
 	
+ 
+ 
 @frappe.whitelist()
 @mtpl_validate(methods=["GET"])
 def get_document_list(reference_doctype, user=None):
@@ -101,6 +105,7 @@ def get_document_list(reference_doctype, user=None):
         frappe.log_error(frappe.get_traceback(), "get_document_list Error")
         return gen_response(500, str(e))
 
+
 def get_status(status):
 	if status == 0:
 		return 'Draft'
@@ -149,10 +154,17 @@ def get_workflow_action(reference_doctype, reference_name):
 
 @frappe.whitelist()
 @mtpl_validate(methods=["GET"])
-def get_print_format(reference_doctype, reference_name, print_format_name=None):
+def get_print_format(reference_doctype, reference_name):
     try:
-        if not print_format_name:
-            print_format_name = "Standard"
+        print_format_name = "Standard"
+        workflow_list = frappe.get_all("Workflow",filters={'document_type': reference_doctype, 'is_active': 1}, fields=['print_format'])
+        for i in workflow_list:
+            if i.print_format:
+                print_format_name = i.print_format
+        print("............",workflow_list)
+        
+        # if not print_format_name:
+        #     print_format_name = "Standard"
         
         res = frappe.get_print(
             doctype=reference_doctype,
