@@ -1,0 +1,73 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-12-09 15:28:56.884788",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "doctype_",
+  "doctype_id",
+  "column_break_lovaz",
+  "user",
+  "seen",
+  "workflow_state"
+ ],
+ "fields": [
+  {
+   "fieldname": "doctype_",
+   "fieldtype": "Data",
+   "label": "Doctype_"
+  },
+  {
+   "fieldname": "doctype_id",
+   "fieldtype": "Data",
+   "label": "Doctype Id"
+  },
+  {
+   "fieldname": "column_break_lovaz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Data",
+   "label": "User"
+  },
+  {
+   "default": "0",
+   "fieldname": "seen",
+   "fieldtype": "Check",
+   "label": "seen"
+  },
+  {
+   "fieldname": "workflow_state",
+   "fieldtype": "Data",
+   "label": "Workflow State"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-12-09 15:28:56.884788",
+ "modified_by": "Administrator",
+ "module": "Erpnext Workflow",
+ "name": "Socket Notification List",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
