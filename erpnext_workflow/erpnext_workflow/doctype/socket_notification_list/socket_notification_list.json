@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "SNL-.####",
  "creation": "2025-12-09 15:28:56.884788",
  "default_view": "List",
  "doctype": "DocType",
@@ -48,10 +49,11 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-12-09 15:28:56.884788",
+ "modified": "2025-12-10 11:26:10.174631",
  "modified_by": "Administrator",
  "module": "Erpnext Workflow",
  "name": "Socket Notification List",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {

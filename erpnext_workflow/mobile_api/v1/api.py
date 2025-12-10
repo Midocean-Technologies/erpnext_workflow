@@ -295,17 +295,24 @@ def trigger_workflow_notification(doc, method):
     if not new_state or old_state == new_state:
         return None
     
-    required_role = frappe.db.get_value(
+    current_role = frappe.db.get_value(
         "Workflow Document State",
         {"parent": workflow_name, "state": new_state},
         "allow_edit"
     )
-    if not required_role:
+    if not current_role:
         return None
-
-    current_user = frappe.session.user
-
-    if not frappe.get_roles(current_user) or required_role not in frappe.get_roles(current_user):
+    
+    users = frappe.db.get_all(
+        "Has Role",
+        filters={"role": current_role},
+        fields=["parent as user"]
+    )
+    enabled_users = [
+        u.user for u in users
+        if frappe.db.get_value("User", u.user, "enabled")
+    ]
+    if not enabled_users:
         return None
     
     transitions = frappe.get_all(
@@ -323,18 +330,21 @@ def trigger_workflow_notification(doc, method):
     }
     
     frappe.log_error("Workflow Notification", message)
-    
-    frappe.publish_realtime("erp_notification", message, user=current_user)
-    
+
+    for user in enabled_users:
+        frappe.publish_realtime("erp_notification", message, user=user)
+   
+    current_user = frappe.session.user   
+
     try:
         nl = frappe.new_doc("Socket Notification List")
-        nl.seen = 0  
-        nl.user = current_user
+        nl.seen = 0
+        nl.user = current_user          
         nl.doctype_ = doc.doctype
         nl.doctype_id = doc.name
         nl.workflow_state = new_state
         nl.insert(ignore_permissions=True)
-                    
+        
     except Exception as e:
         frappe.log_error("Notification List Error", f"User: {current_user}, Error: {str(e)}")
     
