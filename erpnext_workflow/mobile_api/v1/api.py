@@ -5,8 +5,6 @@ from erpnext_workflow.mobile_api.v1.api_utils import *
 from frappe.model.workflow import get_transitions, get_workflow, apply_workflow
 import re
 from frappe.utils.user import get_users_with_role
-
-
 def get_frappe_version() -> str:
     return getattr(frappe, "__version__", "unknown")
 
@@ -45,62 +43,91 @@ def login(usr, pwd):
 @mtpl_validate(methods=["GET"])
 def get_document_type_list(user=None):
     try:
-        doc = frappe.get_list('Workflow Action', filters={'status': 'Open'}, fields=['name', 'reference_name', 'reference_doctype'])
-        gen_response(200 ,"Data Fetch Succesfully", doc)
+        active_workflows = frappe.get_all(
+            "Workflow",
+            filters={"is_active": 1},
+            fields=["document_type"]
+        )
+
+        workflow_doctypes = {w.document_type for w in active_workflows}
+
+        doc = frappe.get_list(
+            "Workflow Action",
+            filters={
+                "status": "Open",
+                "reference_doctype": ["in", list(workflow_doctypes)]
+            },
+            fields=["name", "reference_name", "reference_doctype"]
+        )
+
+        return gen_response(200, "Data Fetch Successfully", doc)
+
     except frappe.PermissionError:
         return gen_response(500, "Not permitted")
+
     except Exception as e:
         return exception_handler(e)
-	
- 
- 
+
+
 @frappe.whitelist()
 @mtpl_validate(methods=["GET"])
 def get_document_list(reference_doctype, user=None):
     try:
         lst = []
- 
+
         settings = frappe.get_single("Smart Workflow Settings")
- 
+
         title_map = {}
         for row in settings.title_fields:
             title_map[row.reference_doctype] = row.title_field_name
- 
+
         workflow_state_filter = frappe.form_dict.get("workflow_state")
- 
+
         document_list = frappe.get_list(
             "Workflow Action",
             filters={"status": "Open", "reference_doctype": reference_doctype},
             fields=["name", "reference_name", "reference_doctype"]
         )
- 
+
+        workflow_name = frappe.db.get_value(
+            "Workflow",
+            {"document_type": reference_doctype, "is_active": 1},
+            "name"
+        )
+        
+        workflow_state_field = None
+        if workflow_name:
+            workflow_state_field = frappe.db.get_value(
+                "Workflow",
+                workflow_name,
+                "workflow_state_field"
+            ) or "workflow_state"
+
         for row in document_list:
             if frappe.db.exists(row.reference_doctype, row.reference_name):
- 
+
                 doc = frappe.get_doc(row.reference_doctype, row.reference_name)
-                current_state = getattr(doc, "workflow_state", "")
- 
+
+                current_state = getattr(doc, workflow_state_field, "")
+
                 if workflow_state_filter and current_state != workflow_state_filter:
                     continue
- 
+
                 info = {}
                 info["reference_doctype"] = row.reference_doctype
                 info["reference_name"] = row.reference_name
                 info["workflow_state"] = current_state
- 
+
                 title_field = title_map.get(row.reference_doctype)
-                if title_field and hasattr(doc, title_field):
-                    info["title"] = getattr(doc, title_field)
-                else:
-                    info["title"] = ""
- 
+                info["title"] = getattr(doc, title_field) if title_field else ""
+
                 lst.append(info)
- 
+
         return gen_response(200, "Data Fetched Successfully", lst)
- 
+
     except frappe.PermissionError:
         return gen_response(500, "Not permitted")
- 
+
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "get_document_list Error")
         return gen_response(500, str(e))
@@ -154,17 +181,10 @@ def get_workflow_action(reference_doctype, reference_name):
 
 @frappe.whitelist()
 @mtpl_validate(methods=["GET"])
-def get_print_format(reference_doctype, reference_name):
+def get_print_format(reference_doctype, reference_name, print_format_name=None):
     try:
-        print_format_name = "Standard"
-        workflow_list = frappe.get_all("Workflow",filters={'document_type': reference_doctype, 'is_active': 1}, fields=['print_format'])
-        for i in workflow_list:
-            if i.print_format:
-                print_format_name = i.print_format
-        print("............",workflow_list)
-        
-        # if not print_format_name:
-        #     print_format_name = "Standard"
+        if not print_format_name:
+            print_format_name = "Standard"
         
         res = frappe.get_print(
             doctype=reference_doctype,
@@ -275,24 +295,17 @@ def trigger_workflow_notification(doc, method):
     if not new_state or old_state == new_state:
         return None
     
-    current_role = frappe.db.get_value(
+    required_role = frappe.db.get_value(
         "Workflow Document State",
         {"parent": workflow_name, "state": new_state},
         "allow_edit"
     )
-    if not current_role:
+    if not required_role:
         return None
-    
-    users = frappe.db.get_all(
-        "Has Role",
-        filters={"role": current_role},
-        fields=["parent as user"]
-    )
-    enabled_users = [
-        u.user for u in users
-        if frappe.db.get_value("User", u.user, "enabled")
-    ]
-    if not enabled_users:
+
+    current_user = frappe.session.user
+
+    if not frappe.get_roles(current_user) or required_role not in frappe.get_roles(current_user):
         return None
     
     transitions = frappe.get_all(
@@ -311,24 +324,19 @@ def trigger_workflow_notification(doc, method):
     
     frappe.log_error("Workflow Notification", message)
     
-    for user in enabled_users:
-        frappe.publish_realtime("erp_notification", message, user=user)
-        
-        try:
-            nl = frappe.new_doc("Socket Notification List")
-            nl.seen = 0  
-            
-            if hasattr(nl, 'user'):
-                nl.user = user
-            
-            nl.doctype_ = doc.doctype
-            nl.doctype_id = doc.name
-            nl.workflow_state = new_state
-            
-            nl.insert(ignore_permissions=True)
-                        
-        except Exception as e:
-            frappe.log_error("Notification List Error", f"User: {user}, Error: {str(e)}")
+    frappe.publish_realtime("erp_notification", message, user=current_user)
+    
+    try:
+        nl = frappe.new_doc("Socket Notification List")
+        nl.seen = 0  
+        nl.user = current_user
+        nl.doctype_ = doc.doctype
+        nl.doctype_id = doc.name
+        nl.workflow_state = new_state
+        nl.insert(ignore_permissions=True)
+                    
+    except Exception as e:
+        frappe.log_error("Notification List Error", f"User: {current_user}, Error: {str(e)}")
     
     frappe.db.commit()
     
