@@ -333,16 +333,17 @@ def trigger_workflow_notification(doc, method):
 
     for user in enabled_users:
         frappe.publish_realtime("erp_notification", message, user=user)
-        try:
-            nl = frappe.new_doc("Socket Notification List")
-            nl.seen = 0
-            nl.user = user
-            nl.doctype_ = doc.doctype
-            nl.doctype_id = doc.name
-            nl.workflow_state = new_state
-            nl.insert(ignore_permissions=True)
-        except Exception as e:
-            frappe.log_error("Notification List Error", str(e))
+
+    try:
+        nl = frappe.new_doc("Socket Notification List")
+        nl.seen = 0
+        nl.user = frappe.session.user 
+        nl.doctype_ = doc.doctype
+        nl.doctype_id = doc.name
+        nl.workflow_state = new_state
+        nl.insert(ignore_permissions=True)
+    except Exception as e:
+        frappe.log_error("Notification List Error", str(e))
 
     frappe.db.commit()
     return message
