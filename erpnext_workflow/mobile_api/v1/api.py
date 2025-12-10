@@ -272,7 +272,6 @@ def store_fcm_token(user, token):
 @frappe.whitelist()
 @mtpl_validate(methods=["POST"])
 def trigger_workflow_notification(doc, method):
-
     workflow_name = frappe.db.get_value(
         "Workflow",
         {"document_type": doc.doctype, "is_active": 1},
@@ -290,7 +289,6 @@ def trigger_workflow_notification(doc, method):
         return
 
     new_state = doc.get(workflow_state_field)
-
     previous = doc.get_doc_before_save()
     old_state = previous.get(workflow_state_field) if previous else None
 
@@ -310,6 +308,7 @@ def trigger_workflow_notification(doc, method):
         filters={"role": current_role},
         fields=["parent as user"]
     )
+
     enabled_users = [
         u.user for u in users
         if frappe.db.get_value("User", u.user, "enabled")
@@ -334,21 +333,16 @@ def trigger_workflow_notification(doc, method):
 
     for user in enabled_users:
         frappe.publish_realtime("erp_notification", message, user=user)
+        try:
+            nl = frappe.new_doc("Socket Notification List")
+            nl.seen = 0
+            nl.user = user
+            nl.doctype_ = doc.doctype
+            nl.doctype_id = doc.name
+            nl.workflow_state = new_state
+            nl.insert(ignore_permissions=True)
+        except Exception as e:
+            frappe.log_error("Notification List Error", str(e))
 
-    try:
-        current_user = frappe.session.user  
-
-        nl = frappe.new_doc("Socket Notification List")
-        nl.seen = 0
-        nl.user = current_user
-        nl.doctype_ = doc.doctype
-        nl.doctype_id = doc.name
-        nl.workflow_state = new_state
-        nl.insert(ignore_permissions=True)
-
-    except Exception as e:
-        frappe.log_error("Notification List Error", str(e))
-    
     frappe.db.commit()
-    
     return message
