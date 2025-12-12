@@ -188,7 +188,6 @@ def get_print_format(reference_doctype, reference_name):
         for i in workflow_list:
             if i.print_format:
                 print_format_name = i.print_format
-        print("............",workflow_list)
         
         # if not print_format_name:
         #     print_format_name = "Standard"
@@ -319,7 +318,6 @@ def trigger_workflow_notification(doc, method):
         u.user for u in users
         if frappe.db.get_value("User", u.user, "enabled")
     ]
-    print("***********",enabled_users)
     
     if not enabled_users:
         return
@@ -337,9 +335,7 @@ def trigger_workflow_notification(doc, method):
         "msg": new_state,
         "actions": actions_list,
     }
-    
-    frappe.log_error("Workflow Notification", message)
-    
+        
     for user in enabled_users:
         frappe.publish_realtime("erp_notification", message, user=user)
 
