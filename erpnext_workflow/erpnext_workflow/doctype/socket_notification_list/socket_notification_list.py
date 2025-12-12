@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class ErpnextWorkflowNotification(Document):
+class SocketNotificationList(Document):
 	pass

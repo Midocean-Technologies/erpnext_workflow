@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestErpnextWorkflowNotification(FrappeTestCase):
+class TestSocketNotificationList(FrappeTestCase):
 	pass
