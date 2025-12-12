@@ -147,6 +147,7 @@ after_migrate = "erpnext_workflow.install.after_install"
 # }
 # hooks.py
 # hooks.py
+
 doc_events = {
     "*": {
         "on_update": "erpnext_workflow.mobile_api.v1.api.trigger_workflow_notification"
@@ -249,4 +250,3 @@ doc_events = {
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-
