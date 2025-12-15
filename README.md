@@ -14,6 +14,10 @@
  - Go to Role Permission Manager
  - Provide access permission of Socket Notification List doctype according to Role wise.
 
+### Installation Video Link
+ - Android: [https://drive.google.com/file/d/1dqlhJcUwQV_jzuZt80f_tSOhGo4wy6e1/view?usp=drive_link](https://drive.google.com/file/d/1dqlhJcUwQV_jzuZt80f_tSOhGo4wy6e1/view?usp=drive_link)
+ - ERPNext: [https://drive.google.com/file/d/1PoRSZ2BT3yi2CQfVpW787KSUTTRB2slP/view?usp=drive_link](https://drive.google.com/file/d/1PoRSZ2BT3yi2CQfVpW787KSUTTRB2slP/view?usp=drive_link)
+
 ### Features
 - Workflow Approval
 - Notification
