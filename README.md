@@ -9,13 +9,13 @@
 
 - bench get-app [https://github.com/Midocean-Technologies/erpnext_workflow.git](https://github.com/Midocean-Technologies/erpnext_workflow.git)
 
-- bench --site (sitename) install-app business_theme_v14
+- bench --site (sitename) install-app erpnext_workflow
 
 - bench clear-cache
 
 
 ### ERPNext Workflow Configuration 
-- Check Enable checkbox in Smart Workflow Settings
+#### Check Enable checkbox in Smart Workflow Settings
 
 <img width="1292" height="616" alt="Smart Workflow Setting" src="https://github.com/user-attachments/assets/3ba7a586-9b19-42f2-9db3-6a0680f159de" />
 
