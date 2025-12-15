@@ -15,9 +15,13 @@
 
 
 ### ERPNext Workflow Configuration 
-#### Check Enable checkbox in Smart Workflow Settings
+- Check Enable checkbox in Smart Workflow Settings
 
 <img width="1292" height="616" alt="Smart Workflow Setting" src="https://github.com/user-attachments/assets/3ba7a586-9b19-42f2-9db3-6a0680f159de" />
+
+- Create Workflow : Add Workflow Name, Doctype Name and Check Is Active Checkbox
+
+<img width="1292" height="616" alt="workflow_" src="https://github.com/user-attachments/assets/701fb457-fdda-41cd-bca6-d46971146deb" />
 
 - Create Workflow according to user permission [Role wise Permission]
 
