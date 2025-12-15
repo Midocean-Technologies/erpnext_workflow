@@ -22,9 +22,6 @@
 - Dynamic Print Format (Custom)
 - Chat Feature
 
-### Feature Request
-- [Contact Now](https://forms.gle/DpvCDCxsyhnNtqk99)
-### Frappe Cloud: [Link](https://frappecloud.com/marketplace/apps/mtpl_api)
 ### Support
 For any issues, questions, or support related to the this App, Kindly contact &lt;sagar@midocean.tech&gt;
 Thank you for using our App! We hope you enjoy the options it provides for your application.
