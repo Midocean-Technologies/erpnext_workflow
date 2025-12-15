@@ -43,7 +43,3 @@
 ### Planned Future Updates
 - Dynamic Print Format (Custom)
 - Chat Feature
-
-### Support
-For any issues, questions, or support related to the this App, Kindly contact &lt;sagar@midocean.tech&gt;
-Thank you for using our App! We hope you enjoy the options it provides for your application.
