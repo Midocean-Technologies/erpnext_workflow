@@ -1,8 +1,7 @@
 # ERPNext Workflow : Interactive Mobile App
 > Beta Version: This application is currently undergoing active development to improve stability and functionality.
 # Download App
-	🔗 Android: [https://play.google.com/store/apps/details?id=com.midocean.erpnextworkflow](https://play.google.com/store/apps/details?id=com.midocean.erpnextworkflow)  
-
+	🔗 Website: [https://midocean.tech](https://midocean.tech)  
 	•	Apple: Coming Soon!
 # Features
 	•	Workflow Approval
