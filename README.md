@@ -27,7 +27,9 @@
 
 <img width="1292" height="616" alt="Workflow List" src="https://github.com/user-attachments/assets/d28d4e23-2efb-490c-bdb9-366b06a9831f" />
 
+- Give Socket Notification List Doctype Permission
 
+<img width="1288" height="618" alt="Socket Notification List Permission" src="https://github.com/user-attachments/assets/bbddb42b-2f45-4439-b272-9e3dcc6060e5" />
 
 
 
