@@ -5,13 +5,14 @@
 - Android: [Play Store](https://play.google.com/store/apps/details?id=com.midocean.erpnextworkflow) 
 - Apple: Coming Soon!
 
-### ERPNext Workflow Configuration setps
- - Install ERPNext Workflow Application
- - Go to Smart Workflow Setting
- - Check Enable checkbox
- - Create Workflow according to user permission [Role wise Permission].
- - Go to Role Permission Manager
- - Provide access permission of Socket Notification List doctype according to Role wise.
+### Install ERPNext Workflow Application
+
+- bench get-app [https://github.com/Midocean-Technologies/erpnext_workflow.git](https://github.com/Midocean-Technologies/erpnext_workflow.git)
+
+- bench --site (sitename) install-app business_theme_v14
+
+- bench clear-cache
+
 
 ### ERPNext Workflow Configuration 
 - Check Enable checkbox in Smart Workflow Settings
@@ -29,15 +30,6 @@
 ### Installation Video Link
  - Android: [https://drive.google.com/file/d/1dqlhJcUwQV_jzuZt80f_tSOhGo4wy6e1/view?usp=drive_link](https://drive.google.com/file/d/1dqlhJcUwQV_jzuZt80f_tSOhGo4wy6e1/view?usp=drive_link)
  - ERPNext: [https://drive.google.com/file/d/1PoRSZ2BT3yi2CQfVpW787KSUTTRB2slP/view?usp=drive_link](https://drive.google.com/file/d/1PoRSZ2BT3yi2CQfVpW787KSUTTRB2slP/view?usp=drive_link)
-
-### To install this theme on dedicated servers
-
-- bench get-app [https://github.com/Midocean-Technologies/erpnext_workflow.git](https://github.com/Midocean-Technologies/erpnext_workflow.git)
-
-- bench --site (sitename) install-app business_theme_v14
-
-- bench clear-cache
-
 
 
 ### Features
