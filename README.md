@@ -20,6 +20,12 @@
 
 ### To install this theme on dedicated servers
 
+- bench get-app [https://github.com/Midocean-Technologies/erpnext_workflow.git](https://github.com/Midocean-Technologies/erpnext_workflow.git)
+
+- bench --site (sitename) install-app business_theme_v14
+
+- bench clear-cache
+
 
 
 ### Features
