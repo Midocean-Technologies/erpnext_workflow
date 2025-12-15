@@ -14,8 +14,15 @@
  - Provide access permission of Socket Notification List doctype according to Role wise.
 
 ### ERPNext Workflow Configuration 
-- Check Enable checkbox in Smart Workflow Setting
+- Check Enable checkbox in Smart Workflow Settings
+
 <img width="1292" height="616" alt="Smart Workflow Setting" src="https://github.com/user-attachments/assets/3ba7a586-9b19-42f2-9db3-6a0680f159de" />
+
+- Create Workflow according to user permission [Role wise Permission]
+
+<img width="1292" height="616" alt="Workflow List" src="https://github.com/user-attachments/assets/d28d4e23-2efb-490c-bdb9-366b06a9831f" />
+
+
 
 
 
