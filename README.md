@@ -1,4 +1,3 @@
-<img width="1292" height="616" alt="image" src="https://github.com/user-attachments/assets/41cceaac-3da0-4bcf-84e7-9ca64f3523b8" /> 
 ## ERPNext Workflow : Interactive Mobile App
 &gt; Beta Version: This application is currently undergoing active development to improve stability and functionality.
 
@@ -15,6 +14,7 @@
  - Provide access permission of Socket Notification List doctype according to Role wise.
 
 ### ERPNext Workflow Configuration 
+- Check Enable checkbox in Smart Workflow Setting
 <img width="1292" height="616" alt="Smart Workflow Setting" src="https://github.com/user-attachments/assets/3ba7a586-9b19-42f2-9db3-6a0680f159de" />
 
 
