@@ -11,6 +11,15 @@ def get_frappe_version() -> str:
 @frappe.whitelist(allow_guest=True)
 def login(usr, pwd):
     try:
+        site_url = frappe.utils.get_site_url()
+
+        if " " in site_url or "%20" in site_url:
+            return gen_response(500, "Please check the URL")
+
+        parsed_url = urlparse(site_url)
+        if not parsed_url.scheme or not parsed_url.netloc:
+            return gen_response(500, "Please check the URL")
+
         login_manager = LoginManager()
         login_manager.authenticate(usr, pwd)
         login_manager.post_login()
@@ -27,16 +36,18 @@ def login(usr, pwd):
             if not settings.enabled:
                 return gen_response(500, "User has no permission for mobile app, please contact Admin")
 
-            return gen_response(200, "Logged In", {"user": user,"frappe_version" : frappe_version})
+            return gen_response(200, "Logged In", {
+                "user": user,
+                "frappe_version": frappe_version
+            })
 
         return gen_response(500, "Login failed")
 
     except frappe.AuthenticationError:
         return gen_response(500, "Invalid username or password")
 
-    except Exception as e:
-        clean_msg = BeautifulSoup(str(e), "lxml").get_text()
-        return gen_response(500, clean_msg)
+    except Exception:
+        return gen_response(500, "Please check the URL")
 
 
 @frappe.whitelist()
