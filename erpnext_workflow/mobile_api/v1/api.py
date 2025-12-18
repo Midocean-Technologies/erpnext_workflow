@@ -68,70 +68,68 @@ def get_document_type_list(user=None):
     except Exception as e:
         return exception_handler(e)
 
-
 @frappe.whitelist()
 @mtpl_validate(methods=["GET"])
 def get_document_list(reference_doctype, user=None):
     try:
         lst = []
-
         settings = frappe.get_single("Smart Workflow Settings")
-
-        title_map = {}
-        for row in settings.title_fields:
-            title_map[row.reference_doctype] = row.title_field_name
-
+ 
         workflow_state_filter = frappe.form_dict.get("workflow_state")
-
+ 
         document_list = frappe.get_list(
             "Workflow Action",
-            filters={"status": "Open", "reference_doctype": reference_doctype},
+            filters={
+                "status": "Open",
+                "reference_doctype": reference_doctype
+            },
             fields=["name", "reference_name", "reference_doctype"]
         )
-
+ 
         workflow_name = frappe.db.get_value(
             "Workflow",
             {"document_type": reference_doctype, "is_active": 1},
             "name"
         )
-        
-        workflow_state_field = None
+ 
+        workflow_state_field = "workflow_state"
         if workflow_name:
             workflow_state_field = frappe.db.get_value(
                 "Workflow",
                 workflow_name,
                 "workflow_state_field"
             ) or "workflow_state"
-
+ 
+        meta = frappe.get_meta(reference_doctype)
+        title_field = meta.title_field
+ 
         for row in document_list:
-            if frappe.db.exists(row.reference_doctype, row.reference_name):
-
-                doc = frappe.get_doc(row.reference_doctype, row.reference_name)
-
-                current_state = getattr(doc, workflow_state_field, "")
-
-                if workflow_state_filter and current_state != workflow_state_filter:
-                    continue
-
-                info = {}
-                info["reference_doctype"] = row.reference_doctype
-                info["reference_name"] = row.reference_name
-                info["workflow_state"] = current_state
-
-                title_field = title_map.get(row.reference_doctype)
-                info["title"] = getattr(doc, title_field) if title_field else ""
-
-                lst.append(info)
-
+            if not frappe.db.exists(row.reference_doctype, row.reference_name):
+                continue
+ 
+            doc = frappe.get_doc(row.reference_doctype, row.reference_name)
+            current_state = getattr(doc, workflow_state_field, "")
+ 
+            if workflow_state_filter and current_state != workflow_state_filter:
+                continue
+ 
+            info = {
+                "reference_doctype": row.reference_doctype,
+                "reference_name": row.reference_name,
+                "workflow_state": current_state,
+                "title": doc.get(title_field) if title_field else row.reference_name
+            }
+ 
+            lst.append(info)
+ 
         return gen_response(200, "Data Fetched Successfully", lst)
-
+ 
     except frappe.PermissionError:
         return gen_response(500, "Not permitted")
-
+ 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "get_document_list Error")
-        return gen_response(500, str(e))
-
+        return gen_response(500, "Something went wrong")
 
 def get_status(status):
 	if status == 0:
