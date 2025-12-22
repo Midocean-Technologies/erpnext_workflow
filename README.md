@@ -15,9 +15,8 @@
 
 
 ### ERPNext Workflow Configuration 
-- Check Enable checkbox in Smart Workflow Settings
 
-<img width="1292" height="616" alt="Smart Workflow Setting" src="https://github.com/user-attachments/assets/3ba7a586-9b19-42f2-9db3-6a0680f159de" />
+<img width="1283" height="653" alt="image" src="https://github.com/user-attachments/assets/cdce4807-032f-4d06-a674-59740f174d33" />
 
 - Create Workflow : Add Workflow Name, Doctype Name and Check Is Active Checkbox
 
@@ -26,8 +25,6 @@
 - Create Workflow according to user permission [Role wise Permission]
 
 <img width="1292" height="616" alt="Workflow List" src="https://github.com/user-attachments/assets/d28d4e23-2efb-490c-bdb9-366b06a9831f" />
-
-
 
 
 
@@ -43,7 +40,3 @@
 ### Planned Future Updates
 - Dynamic Print Format (Custom)
 - Chat Feature
-
-### Support
-For any issues, questions, or support related to the this App, Kindly contact &lt;sagar@midocean.tech&gt;
-Thank you for using our App! We hope you enjoy the options it provides for your application.
