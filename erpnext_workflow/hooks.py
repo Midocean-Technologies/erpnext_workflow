@@ -79,6 +79,7 @@ app_license = "mit"
 # 	"filters": "erpnext_workflow.utils.jinja_filters"
 # }
 after_install = "erpnext_workflow.install.after_install"
+after_migrate = "erpnext_workflow.install.after_migrate"
 
 # Installation
 # ------------
@@ -150,9 +151,10 @@ after_install = "erpnext_workflow.install.after_install"
 
 doc_events = {
     "*": {
-        "on_update": "erpnext_workflow.mobile_api.v1.api.trigger_workflow_notification"
+        "on_update": "erpnext_workflow.mobile_api.v1.api.trigger_workflow_notification",
     }
 }
+
 
 # Scheduled Tasks
 # ---------------

@@ -7,10 +7,11 @@
 // 	},
 // });
 frappe.ui.form.on('Smart Workflow Settings', {
-    onload: function (frm) {
-        if (!frm.doc.enabled) {
+    refresh(frm) {
+        if (!frm.doc.enabled && !frm.is_new()) {
             frm.set_value('enabled', 1);
-            frm.save();
+
+            frm.save('Save');
         }
     }
 });
