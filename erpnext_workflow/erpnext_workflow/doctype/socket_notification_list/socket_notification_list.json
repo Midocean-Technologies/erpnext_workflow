@@ -18,13 +18,15 @@
  "fields": [
   {
    "fieldname": "doctype_",
-   "fieldtype": "Data",
-   "label": "Doctype_"
+   "fieldtype": "Link",
+   "label": "Doctype_",
+   "options": "DocType"
   },
   {
    "fieldname": "doctype_id",
-   "fieldtype": "Data",
-   "label": "Doctype Id"
+   "fieldtype": "Dynamic Link",
+   "label": "Doctype Id",
+   "options": "doctype_"
   },
   {
    "fieldname": "column_break_lovaz",
@@ -49,7 +51,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-12-19 14:33:34.379330",
+ "modified": "2025-12-22 11:27:31.252953",
  "modified_by": "Administrator",
  "module": "Erpnext Workflow",
  "name": "Socket Notification List",
