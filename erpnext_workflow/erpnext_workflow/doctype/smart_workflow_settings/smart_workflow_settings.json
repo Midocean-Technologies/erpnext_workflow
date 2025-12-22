@@ -5,9 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "enabled",
-  "firebase_token",
-  "title_fields"
+  "enabled"
  ],
  "fields": [
   {
@@ -15,25 +13,13 @@
    "fieldname": "enabled",
    "fieldtype": "Check",
    "label": "Enabled"
-  },
-  {
-   "fieldname": "firebase_token",
-   "fieldtype": "Small Text",
-   "label": "Firebase Token"
-  },
-  {
-   "allow_bulk_edit": 1,
-   "fieldname": "title_fields",
-   "fieldtype": "Table",
-   "label": "Title Fields",
-   "options": "Title Fields"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-12-04 12:36:35.218270",
+ "modified": "2025-12-22 13:13:21.404877",
  "modified_by": "Administrator",
  "module": "Erpnext Workflow",
  "name": "Smart Workflow Settings",
