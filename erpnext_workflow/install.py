@@ -58,7 +58,7 @@ def create_custom_fields():
     )
 
 def create_role_if_not_exists():
-    ROLE_NAME = "Workflow App"
+    ROLE_NAME = "Workflow Mobile App"
     
     if not frappe.db.exists("Role", ROLE_NAME):
         print(f"Creating role: {ROLE_NAME}")
@@ -75,7 +75,7 @@ def create_role_if_not_exists():
 
 @frappe.whitelist()
 def role_for_socket_notification_list():
-    ROLE_NAME = "Workflow App"
+    ROLE_NAME = "Workflow Mobile App"
     DOCTYPE = "Socket Notification List"
     
     try:
