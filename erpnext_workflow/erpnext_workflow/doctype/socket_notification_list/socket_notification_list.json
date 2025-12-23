@@ -51,7 +51,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-12-22 11:27:31.252953",
+ "modified": "2025-12-23 17:47:44.716996",
  "modified_by": "Administrator",
  "module": "Erpnext Workflow",
  "name": "Socket Notification List",
@@ -66,8 +66,7 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Workflow App",
-   "select": 1,
+   "role": "Workflow Mobile App",
    "share": 1,
    "write": 1
   }
