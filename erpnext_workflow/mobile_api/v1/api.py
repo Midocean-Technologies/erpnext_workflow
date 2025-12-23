@@ -14,20 +14,38 @@ def login(usr, pwd):
         login_manager = LoginManager()
         login_manager.authenticate(usr, pwd)
         login_manager.post_login()
+
         frappe_version = get_frappe_version()
 
         if frappe.response.get("message") == "Logged In":
             user = login_manager.user
 
+            roles = frappe.get_roles(user)
+            if "Workflow Mobile App" not in roles:
+                frappe.throw(
+                    "You don't have permission for Workflow Mobile App. Please contact Administrator."
+                )
+
             try:
                 settings = frappe.get_single("Smart Workflow Settings")
             except frappe.DoesNotExistError:
-                return gen_response(500, "User has no permission for mobile app, please contact Admin")
+                frappe.throw(
+                    "You don't have permission for Workflow Mobile App. Please contact Administrator."
+                )
 
             if not settings.enabled:
-                return gen_response(500, "User has no permission for mobile app, please contact Admin")
+                frappe.throw(
+                    "You don't have permission for Workflow Mobile App. Please contact Administrator."
+                )
 
-            return gen_response(200, "Logged In", {"user": user,"frappe_version" : frappe_version})
+            return gen_response(
+                200,
+                "Logged In",
+                {
+                    "user": user,
+                    "frappe_version": frappe_version
+                }
+            )
 
         return gen_response(500, "Login failed")
 
@@ -37,7 +55,6 @@ def login(usr, pwd):
     except Exception as e:
         clean_msg = BeautifulSoup(str(e), "lxml").get_text()
         return gen_response(500, clean_msg)
-
 
 @frappe.whitelist()
 @mtpl_validate(methods=["GET"])
