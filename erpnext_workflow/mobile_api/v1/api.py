@@ -297,27 +297,32 @@ def trigger_workflow_notification(doc, method):
     if doc.doctype == "Comment":
         try:
             current_user = frappe.session.user
-            comment_type = doc.comment_type
-            reference_doctype = doc.reference_doctype
-            reference_name = doc.reference_name
-            comment_by = doc.comment_by
-            content = doc.content
-            comment_email = doc.comment_email
 
             message = {
-                "owner" : current_user,
-                "comment_type" : "Comment",
-                "comment_email" : comment_email,
-                "comment_by" : comment_by,
-                "reference_doctype" : reference_doctype,
-                "reference_name" : reference_name,
-                "content" : content,
+                "owner": current_user,
+                "comment_type": "Comment",
+                "comment_email": doc.comment_email,
+                "comment_by": doc.comment_by,
+                "reference_doctype": doc.reference_doctype,
+                "reference_name": doc.reference_name,
+                "content": doc.content,
             }
-            frappe.publish_realtime(
-                "comment_notification",
-                message,
-                user!=current_user
+
+            users = frappe.get_all(
+                "User",
+                filters={
+                    "enabled": 1,
+                    "name": ["!=", current_user]
+                },
+                pluck="name"
             )
+
+            for user in users:
+                frappe.publish_realtime(
+                    event="comment_notification",
+                    message=message,
+                    user=user
+                )
 
             frappe.log_error(
                 title="Comment Notification",
@@ -327,6 +332,7 @@ def trigger_workflow_notification(doc, method):
             return message
 
         except Exception:
+            frappe.log_error(frappe.get_traceback(), "Comment Notification Error")
             return
 
     workflow_name = frappe.db.get_value(
