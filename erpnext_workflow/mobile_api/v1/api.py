@@ -364,11 +364,6 @@ def trigger_workflow_notification(doc, method):
                     message=message,
                     user=user
                 )
-            frappe.log_error(
-                title="Comment Notification",
-                message=f"Comment Msg: {message}"
-            )
-
             return message
 
         except Exception:
