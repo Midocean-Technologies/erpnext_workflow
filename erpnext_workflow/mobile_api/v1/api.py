@@ -314,7 +314,7 @@ def trigger_workflow_notification(doc, method):
                 "content" : content,
             }
             frappe.publish_realtime(
-                "erp_notification",
+                "comment_notification",
                 message,
                 user!=current_user
             )
