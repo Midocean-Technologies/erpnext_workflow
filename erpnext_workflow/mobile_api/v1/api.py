@@ -294,6 +294,41 @@ def store_fcm_token(user, token):
 @frappe.whitelist()
 @mtpl_validate(methods=["POST"])
 def trigger_workflow_notification(doc, method):
+    if doc.doctype == "Comment":
+        try:
+            current_user = frappe.session.user
+            comment_type = doc.comment_type
+            reference_doctype = doc.reference_doctype
+            reference_name = doc.reference_name
+            comment_by = doc.comment_by
+            content = doc.content
+            comment_email = doc.comment_email
+
+            message = {
+                "owner" : current_user,
+                "comment_type" : "Comment",
+                "comment_email" : comment_email,
+                "comment_by" : comment_by,
+                "reference_doctype" : reference_doctype,
+                "reference_name" : reference_name,
+                "content" : content,
+            }
+            frappe.publish_realtime(
+                "erp_notification",
+                message,
+                user!=current_user
+            )
+
+            frappe.log_error(
+                title="Comment Notification",
+                message=f"""Msg: {message}"""
+            )
+
+            return message
+
+        except Exception:
+            return
+
     workflow_name = frappe.db.get_value(
         "Workflow",
         {"document_type": doc.doctype, "is_active": 1},
@@ -368,4 +403,4 @@ def trigger_workflow_notification(doc, method):
             frappe.log_error(f"Error creating Socket Notification for {user}: {str(e)}")
 
     frappe.db.commit()
-    return message
+    return message   
