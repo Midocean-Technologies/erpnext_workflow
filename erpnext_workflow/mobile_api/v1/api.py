@@ -308,25 +308,65 @@ def trigger_workflow_notification(doc, method):
                 "content": doc.content,
             }
 
-            users = frappe.get_all(
-                "User",
-                filters={
-                    "enabled": 1,
-                    "name": ["!=", current_user]
+            workflow_name = frappe.db.get_value(
+                "Workflow",
+                {
+                    "document_type": doc.reference_doctype,
+                    "is_active": 1
                 },
-                pluck="name"
+                "name"
+            )
+            if not workflow_name:
+                return
+
+            workflow_state_field = frappe.db.get_value(
+                "Workflow",
+                workflow_name,
+                "workflow_state_field"
+            )
+            if not workflow_state_field:
+                return
+
+            ref_doc = frappe.get_doc(doc.reference_doctype, doc.reference_name)
+            current_state = ref_doc.get(workflow_state_field)
+            if not current_state:
+                return
+
+            current_role = frappe.db.get_value(
+                "Workflow Document State",
+                {
+                    "parent": workflow_name,
+                    "state": current_state
+                },
+                "allow_edit"
+            )
+            if not current_role:
+                return
+
+            users = frappe.db.get_all(
+                "Has Role",
+                filters={"role": current_role},
+                fields=["parent as user"]
             )
 
-            for user in users:
+            enabled_users = [
+                u.user for u in users
+                if frappe.db.get_value("User", u.user, "enabled")
+                and u.user != current_user
+            ]
+
+            if not enabled_users:
+                return
+
+            for user in enabled_users:
                 frappe.publish_realtime(
                     event="comment_notification",
                     message=message,
                     user=user
                 )
-
             frappe.log_error(
                 title="Comment Notification",
-                message=f"""Msg: {message}"""
+                message=f"Comment Msg: {message}"
             )
 
             return message
