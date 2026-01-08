@@ -8,7 +8,8 @@ def triggerd_fcm_notification(fcm_token,title, body, image=None):
     
     fcm_json_data = frappe.get_doc("Smart Workflow Settings","Smart Workflow Settings")
     
-    gcp_json_credentials_dict = json.loads(os.getenv(fcm_json_data.fcm_json_data , None))
+    # gcp_json_credentials_dict = json.loads(os.getenv(fcm_json_data.fcm_json_data , None))
+    gcp_json_credentials_dict = json.loads(fcm_json_data.fcm_json_data)
     credentials = service_account.Credentials.from_service_account_info(gcp_json_credentials_dict, scopes=['https://www.googleapis.com/auth/firebase.messaging'])
     fcm = FCMNotification(service_account_file=None, credentials=credentials, project_id="erpnext-workflow-c5727")
 
