@@ -1,5 +1,3 @@
-# Copyright (c) 2025, Midocean Technologies Pvt Ltd and contributors
-# For license information, please see license.txt
 
 import frappe
 from frappe.model.document import Document
@@ -14,6 +12,9 @@ class SocketNotificationList(Document):
     
 		except Exception as e:
 			frappe.log_error("FCM Notification Error", frappe.get_traceback(e))
+   
+   
+   
 
       
             
