@@ -8,7 +8,8 @@ class SocketNotificationList(Document):
 		try:
 			if self.user:
 				user_fcm_token = frappe.get_value("User", self.user, 'user_fcm_token')
-				triggerd_fcm_notification(user_fcm_token, self.doctype_, self.doctype_id)
+				if user_fcm_token:
+					triggerd_fcm_notification(user_fcm_token, self.doctype_, self.doctype_id)
     
 		except Exception as e:
 			frappe.log_error("FCM Notification Error", frappe.get_traceback(e))
