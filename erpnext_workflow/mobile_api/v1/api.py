@@ -88,7 +88,7 @@ def get_document_type_list(user=None):
 
 @frappe.whitelist()
 @mtpl_validate(methods=["GET"])
-def get_document_list(reference_doctype, user=None):
+def get_document_list(reference_doctype, start, page_length ,user=None):
     try:
         lst = []
         settings = frappe.get_single("Smart Workflow Settings")
@@ -100,7 +100,7 @@ def get_document_list(reference_doctype, user=None):
             filters={
                 "status": "Open",
                 "reference_doctype": reference_doctype
-            },
+            }, page_length = page_length, start=start,
             fields=["name", "reference_name", "reference_doctype"]
         )
  
