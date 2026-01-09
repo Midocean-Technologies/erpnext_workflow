@@ -13,7 +13,7 @@ def send_fcm_notification(doc):
 		if doc.user:
 			user_fcm_token = frappe.get_value("User", doc.user, 'user_fcm_token')
 			if user_fcm_token:
-				triggerd_fcm_notification(user_fcm_token, doc.doctype_, doc.doctype_id)
+				triggerd_fcm_notification(user_fcm_token, 'WorkFlow Action Updated', doc.message)
 
 	except Exception as e:
 		frappe.log_error("FCM Notification Error", frappe.get_traceback(e))
