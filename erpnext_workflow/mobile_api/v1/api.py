@@ -445,3 +445,15 @@ def trigger_workflow_notification(doc, method):
 
     frappe.db.commit()
     return message   
+
+
+
+
+
+
+
+
+
+
+
+
