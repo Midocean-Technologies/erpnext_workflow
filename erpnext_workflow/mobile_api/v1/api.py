@@ -394,7 +394,7 @@ def trigger_workflow_notification(doc, method):
             nl.doctype_ = doc.doctype
             nl.doctype_id = doc.name
             nl.workflow_state = new_state
-            nl.message = str(message)
+            # nl.message = str(message)
             nl.save(ignore_permissions=True)
         except Exception as e:
             frappe.log_error(f"Error creating Socket Notification for {user}: {str(e)}")
