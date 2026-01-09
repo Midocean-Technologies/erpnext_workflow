@@ -5,6 +5,7 @@ from erpnext_workflow.mobile_api.v1.api_utils import *
 from frappe.model.workflow import get_transitions, get_workflow, apply_workflow
 import re
 from frappe.utils.user import get_users_with_role
+from erpnext_workflow.mobile_api.fcm_notification import triggerd_fcm_notification
 def get_frappe_version() -> str:
     return getattr(frappe, "__version__", "unknown")
 
@@ -364,11 +365,14 @@ def trigger_workflow_notification(doc, method):
                     message=message,
                     user=user
                 )
+            enqueue_send_fcm_notification(enabled_users,doc.reference_doctype, doc.reference_name)
             return message
+
 
         except Exception:
             frappe.log_error(frappe.get_traceback(), "Comment Notification Error")
             return
+        
 
     workflow_name = frappe.db.get_value(
         "Workflow",
@@ -447,10 +451,25 @@ def trigger_workflow_notification(doc, method):
     return message   
 
 
+@frappe.whitelist()
+def enqueue_send_fcm_notification(enabled_users, doctype, docname):
+    data = {
+        'enabled_user': enabled_users,
+        'doctype': doctype,
+        'docname': docname
+    }
+    frappe.enqueue("erpnext_workflow.mobile_api.v1.api.send_fcm_notification",data=data, queue='long')
 
+@frappe.whitelist()
+def send_fcm_notification(data):
+    try:
+        for j in data.get('enabled_user'):
+            user_fcm_token = frappe.get_value("User", j, 'user_fcm_token')
+            if user_fcm_token:
+                triggerd_fcm_notification(user_fcm_token, data.get('doctype') , data.get('docname'))
 
-
-
+    except Exception as e:
+        frappe.log_error("FCM Notification Error", frappe.get_traceback(e))
 
 
 
