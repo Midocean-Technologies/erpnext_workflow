@@ -5,6 +5,9 @@ from erpnext_workflow.mobile_api.v1.api_utils import *
 from frappe.model.workflow import get_transitions, get_workflow, apply_workflow
 import re
 from frappe.utils.user import get_users_with_role
+from erpnext_workflow.mobile_api.fcm_notification import triggerd_fcm_notification
+from frappe.utils.html_utils import sanitize_html
+from bs4 import BeautifulSoup
 def get_frappe_version() -> str:
     return getattr(frappe, "__version__", "unknown")
 
@@ -296,93 +299,76 @@ def store_fcm_token(user, token):
 def trigger_workflow_notification(doc, method):
     if doc.doctype == "Comment":
         try:
-            current_user = frappe.session.user
+            if doc.comment_type == "Comment":
+                current_user = frappe.session.user  
+                
+                soup1 = BeautifulSoup(doc.content, "html.parser")
+                content = soup1.get_text()
+                
+                message = {
+                    "owner": current_user,
+                    "comment_type": "Comment",
+                    "comment_email": doc.comment_email,
+                    "comment_by": doc.comment_by,
+                    "reference_doctype": doc.reference_doctype,
+                    "reference_name": doc.reference_name,
+                    "content": content,
+                }
+                workflow_name = frappe.db.get_value("Workflow",{"document_type": doc.reference_doctype, "is_active": 1},"name")
+                if not workflow_name:
+                    return
 
-            message = {
-                "owner": current_user,
-                "comment_type": "Comment",
-                "comment_email": doc.comment_email,
-                "comment_by": doc.comment_by,
-                "reference_doctype": doc.reference_doctype,
-                "reference_name": doc.reference_name,
-                "content": doc.content,
-            }
+                workflow_state_field = frappe.db.get_value("Workflow",workflow_name,"workflow_state_field")
+                if not workflow_state_field:
+                    return
 
-            workflow_name = frappe.db.get_value(
-                "Workflow",
-                {
-                    "document_type": doc.reference_doctype,
-                    "is_active": 1
-                },
-                "name"
-            )
-            if not workflow_name:
-                return
+                ref_doc = frappe.get_doc(doc.reference_doctype, doc.reference_name)
+                current_state = ref_doc.get(workflow_state_field)
+                if not current_state:
+                    return
 
-            workflow_state_field = frappe.db.get_value(
-                "Workflow",
-                workflow_name,
-                "workflow_state_field"
-            )
-            if not workflow_state_field:
-                return
+                current_role = frappe.db.get_value("Workflow Document State",{"parent": workflow_name,"state": current_state},"allow_edit")
+                if not current_role:
+                    return
 
-            ref_doc = frappe.get_doc(doc.reference_doctype, doc.reference_name)
-            current_state = ref_doc.get(workflow_state_field)
-            if not current_state:
-                return
+                users = frappe.db.get_all("Has Role",filters={"role": current_role},fields=["parent as user"])
 
-            current_role = frappe.db.get_value(
-                "Workflow Document State",
-                {
-                    "parent": workflow_name,
-                    "state": current_state
-                },
-                "allow_edit"
-            )
-            if not current_role:
-                return
+                enabled_users = [
+                    u.user for u in users
+                    if frappe.db.get_value("User", u.user, "enabled")
+                    and u.user != current_user]
 
-            users = frappe.db.get_all(
-                "Has Role",
-                filters={"role": current_role},
-                fields=["parent as user"]
-            )
+                if not enabled_users:
+                    return
 
-            enabled_users = [
-                u.user for u in users
-                if frappe.db.get_value("User", u.user, "enabled")
-                and u.user != current_user
-            ]
+                for user in enabled_users:
+                    frappe.publish_realtime(event="comment_notification",message=message,user=user)
+                    
+                for user in enabled_users:
+                    try:
+                        nl = frappe.new_doc("Socket Notification List")
+                        nl.user = user
+                        nl.seen = 0
+                        nl.doctype_ = doc.reference_doctype
+                        nl.doctype_id = doc.reference_name
+                        nl.message = str(message)
+                        nl.notification_from = 'Comment'
+                        nl.save(ignore_permissions=True)
+                    except Exception as e:
+                        frappe.log_error(f"Error creating Socket Notification for {user}: {str(e)}")
+                return message
 
-            if not enabled_users:
-                return
-
-            for user in enabled_users:
-                frappe.publish_realtime(
-                    event="comment_notification",
-                    message=message,
-                    user=user
-                )
-            return message
 
         except Exception:
             frappe.log_error(frappe.get_traceback(), "Comment Notification Error")
             return
+        
 
-    workflow_name = frappe.db.get_value(
-        "Workflow",
-        {"document_type": doc.doctype, "is_active": 1},
-        "name"
-    )
+    workflow_name = frappe.db.get_value("Workflow",{"document_type": doc.doctype, "is_active": 1},"name")
     if not workflow_name:
         return
     
-    workflow_state_field = frappe.db.get_value(
-        "Workflow",
-        workflow_name,
-        "workflow_state_field"
-    )
+    workflow_state_field = frappe.db.get_value("Workflow",workflow_name,"workflow_state_field")
     if not workflow_state_field:
         return
     
@@ -393,32 +379,19 @@ def trigger_workflow_notification(doc, method):
     if not new_state or old_state == new_state:
         return
     
-    current_role = frappe.db.get_value(
-        "Workflow Document State",
-        {"parent": workflow_name, "state": new_state},
-        "allow_edit"
-    )
+    current_role = frappe.db.get_value("Workflow Document State",{"parent": workflow_name, "state": new_state},"allow_edit")
     if not current_role:
         return
     
-    users = frappe.db.get_all(
-        "Has Role",
-        filters={"role": current_role},
-        fields=["parent as user"]
-    )
+    users = frappe.db.get_all("Has Role",filters={"role": current_role},fields=["parent as user"])
     enabled_users = [
         u.user for u in users
-        if frappe.db.get_value("User", u.user, "enabled")
-    ]
+        if frappe.db.get_value("User", u.user, "enabled")]
     
     if not enabled_users:
         return
     
-    transitions = frappe.get_all(
-        "Workflow Transition",
-        filters={"parent": workflow_name, "state": new_state},
-        fields=["action"]
-    )
+    transitions = frappe.get_all("Workflow Transition",filters={"parent": workflow_name, "state": new_state},fields=["action"])
     actions_list = [{"action": t["action"]} for t in transitions]
     
     message = {
@@ -427,7 +400,6 @@ def trigger_workflow_notification(doc, method):
         "msg": new_state,
         "actions": actions_list,
     }
-        
     for user in enabled_users:
         frappe.publish_realtime("erp_notification", message, user=user)
 
@@ -439,9 +411,38 @@ def trigger_workflow_notification(doc, method):
             nl.doctype_ = doc.doctype
             nl.doctype_id = doc.name
             nl.workflow_state = new_state
+            nl.message = str(message)
+            nl.notification_from = 'WorkFlow Action'
             nl.save(ignore_permissions=True)
         except Exception as e:
             frappe.log_error(f"Error creating Socket Notification for {user}: {str(e)}")
 
     frappe.db.commit()
     return message   
+
+
+# @frappe.whitelist()
+# def enqueue_send_fcm_notification(enabled_users, doctype, docname):
+#     data = {
+#         'enabled_user': enabled_users,
+#         'doctype': doctype,
+#         'docname': docname
+#     }
+#     frappe.enqueue("erpnext_workflow.mobile_api.v1.api.send_fcm_notification",data=data, queue='long')
+
+# @frappe.whitelist()
+# def send_fcm_notification(data):
+#     try:
+#         for j in data.get('enabled_user'):
+#             user_fcm_token = frappe.get_value("User", j, 'user_fcm_token')
+#             if user_fcm_token:
+#                 triggerd_fcm_notification(user_fcm_token, data.get('doctype') , data.get('docname'))
+
+#     except Exception as e:
+#         frappe.log_error("FCM Notification Error", frappe.get_traceback(e))
+
+
+
+
+
+

@@ -10,10 +10,13 @@
  "field_order": [
   "doctype_",
   "doctype_id",
+  "notification_from",
   "column_break_lovaz",
   "user",
   "seen",
-  "workflow_state"
+  "workflow_state",
+  "section_break_aaqkd",
+  "message"
  ],
  "fields": [
   {
@@ -47,11 +50,26 @@
    "fieldname": "workflow_state",
    "fieldtype": "Data",
    "label": "Workflow State"
+  },
+  {
+   "fieldname": "section_break_aaqkd",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Message"
+  },
+  {
+   "fieldname": "notification_from",
+   "fieldtype": "Data",
+   "label": "Notification From"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-12-23 17:47:44.716996",
+ "modified": "2026-01-12 11:50:52.826103",
  "modified_by": "Administrator",
  "module": "Erpnext Workflow",
  "name": "Socket Notification List",
