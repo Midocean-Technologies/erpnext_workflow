@@ -10,6 +10,7 @@
  "field_order": [
   "doctype_",
   "doctype_id",
+  "notification_from",
   "column_break_lovaz",
   "user",
   "seen",
@@ -59,11 +60,16 @@
    "fieldtype": "Small Text",
    "hidden": 1,
    "label": "Message"
+  },
+  {
+   "fieldname": "notification_from",
+   "fieldtype": "Data",
+   "label": "Notification From"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-09 19:04:43.048984",
+ "modified": "2026-01-10 22:34:15.405447",
  "modified_by": "Administrator",
  "module": "Erpnext Workflow",
  "name": "Socket Notification List",

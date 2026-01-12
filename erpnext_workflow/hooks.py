@@ -153,9 +153,9 @@ doc_events = {
     "*": {
         "on_update": "erpnext_workflow.mobile_api.v1.api.trigger_workflow_notification"
     },
-    "Comment": {
-        "after_insert": "erpnext_workflow.mobile_api.v1.api.trigger_workflow_notification"
-    }
+    # "Comment": {
+    #     "after_insert": "erpnext_workflow.mobile_api.v1.api.trigger_workflow_notification"
+    # }
 }
 
 
