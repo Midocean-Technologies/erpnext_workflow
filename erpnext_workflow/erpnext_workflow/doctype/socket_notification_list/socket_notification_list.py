@@ -16,7 +16,7 @@ def send_fcm_notification(doc):
 				if doc.notification_from == "Comment":
 					title = 'New Comment Added !'
 				else:
-					title = 'WorkFlow Action Updated !'
+					title = 'Workflow Action Updated !'
 				# triggerd_fcm_notification(user_fcm_token, doc.doctype_, doc.doctype_id)
 				triggerd_fcm_notification(user_fcm_token, title, doc.message)
 
