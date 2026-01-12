@@ -6,6 +6,8 @@ from frappe.model.workflow import get_transitions, get_workflow, apply_workflow
 import re
 from frappe.utils.user import get_users_with_role
 from erpnext_workflow.mobile_api.fcm_notification import triggerd_fcm_notification
+from frappe.utils.html_utils import sanitize_html
+from bs4 import BeautifulSoup
 def get_frappe_version() -> str:
     return getattr(frappe, "__version__", "unknown")
 
@@ -298,8 +300,11 @@ def trigger_workflow_notification(doc, method):
     if doc.doctype == "Comment":
         try:
             if doc.comment_type == "Comment":
-                current_user = frappe.session.user
-
+                current_user = frappe.session.user  
+                
+                soup1 = BeautifulSoup(doc.content, "html.parser")
+                content = soup1.get_text()
+                
                 message = {
                     "owner": current_user,
                     "comment_type": "Comment",
@@ -307,9 +312,8 @@ def trigger_workflow_notification(doc, method):
                     "comment_by": doc.comment_by,
                     "reference_doctype": doc.reference_doctype,
                     "reference_name": doc.reference_name,
-                    "content": doc.content,
+                    "content": content,
                 }
-
                 workflow_name = frappe.db.get_value("Workflow",{"document_type": doc.reference_doctype, "is_active": 1},"name")
                 if not workflow_name:
                     return
