@@ -4,7 +4,7 @@ from pyfcm import FCMNotification
 import frappe
 from google.oauth2 import service_account
 
-def triggerd_fcm_notification(fcm_token, title, body, image=None):
+def triggerd_fcm_notification(fcm_token, title, body, data_payload, image=None):
     
     fcm_json_data = frappe.get_doc("Smart Workflow Settings","Smart Workflow Settings")
     
@@ -17,4 +17,4 @@ def triggerd_fcm_notification(fcm_token, title, body, image=None):
     notification_title = title
     notification_body = body
     notification_image = image
-    result = fcm.notify(fcm_token=fcm_token, notification_title=notification_title, notification_body=notification_body, notification_image=notification_image)
+    result = fcm.notify(fcm_token=fcm_token, notification_title=notification_title, notification_body=notification_body, notification_image=notification_image, data_payload=data_payload)
