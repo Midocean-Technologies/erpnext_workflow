@@ -364,6 +364,7 @@ def trigger_workflow_notification(doc, method):
                         nl.doctype_ = doc.reference_doctype
                         nl.doctype_id = doc.reference_name
                         nl.message = str(msg_str)
+                        nl.json = str(message)
                         nl.notification_from = 'Comment'
                         nl.comment_by = doc.comment_by
                         nl.save(ignore_permissions=True)
@@ -427,6 +428,7 @@ def trigger_workflow_notification(doc, method):
             nl.doctype_id = doc.name
             nl.workflow_state = new_state
             nl.message = str(msg_str)
+            nl.json = str(message)
             nl.notification_from = 'WorkFlow Action'
             nl.save(ignore_permissions=True)
         except Exception as e:

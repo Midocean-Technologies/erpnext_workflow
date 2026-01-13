@@ -16,9 +16,9 @@ def send_fcm_notification(doc):
 				if doc.notification_from == "Comment":
 					title = 'Comment From {0}'.format(doc.comment_by)
 				else:
-					title = 'Workflow Action Updated !'
+					title = 'Workflow Action Requered !'
 				# triggerd_fcm_notification(user_fcm_token, doc.doctype_, doc.doctype_id)
-				triggerd_fcm_notification(user_fcm_token, title, doc.message)
+				triggerd_fcm_notification(user_fcm_token, title, doc.message, doc.json)
 
 	except Exception as e:
 		frappe.log_error("FCM Notification Error", frappe.get_traceback(e))
