@@ -14,7 +14,7 @@ def send_fcm_notification(doc):
 			user_fcm_token = frappe.get_value("User", doc.user, 'user_fcm_token')
 			if user_fcm_token:
 				if doc.notification_from == "Comment":
-					title = 'New Comment Added !'
+					title = 'Comment From {0}'.format(doc.comment_by)
 				else:
 					title = 'Workflow Action Updated !'
 				# triggerd_fcm_notification(user_fcm_token, doc.doctype_, doc.doctype_id)
