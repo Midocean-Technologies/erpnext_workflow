@@ -59,6 +59,7 @@
   {
    "fieldname": "message",
    "fieldtype": "Small Text",
+   "hidden": 1,
    "label": "Message"
   },
   {
@@ -69,12 +70,13 @@
   {
    "fieldname": "comment_by",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Comment By"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-12 22:44:46.345043",
+ "modified": "2026-01-13 11:45:44.500047",
  "modified_by": "Administrator",
  "module": "Erpnext Workflow",
  "name": "Socket Notification List",
