@@ -16,7 +16,8 @@
   "seen",
   "workflow_state",
   "section_break_aaqkd",
-  "message"
+  "message",
+  "comment_by"
  ],
  "fields": [
   {
@@ -58,18 +59,22 @@
   {
    "fieldname": "message",
    "fieldtype": "Small Text",
-   "hidden": 1,
    "label": "Message"
   },
   {
    "fieldname": "notification_from",
    "fieldtype": "Data",
    "label": "Notification From"
+  },
+  {
+   "fieldname": "comment_by",
+   "fieldtype": "Data",
+   "label": "Comment By"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-12 11:50:52.826103",
+ "modified": "2026-01-12 22:44:46.345043",
  "modified_by": "Administrator",
  "module": "Erpnext Workflow",
  "name": "Socket Notification List",

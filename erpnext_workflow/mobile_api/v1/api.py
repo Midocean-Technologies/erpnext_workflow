@@ -98,12 +98,7 @@ def get_document_list(reference_doctype, start, page_length ,user=None):
  
         workflow_state_filter = frappe.form_dict.get("workflow_state")
  
-        document_list = frappe.get_list(
-            "Workflow Action",
-            filters={
-                "status": "Open",
-                "reference_doctype": reference_doctype
-            }, page_length = page_length, start=start,
+        document_list = frappe.get_list("Workflow Action",filters={"status": "Open","reference_doctype": reference_doctype},page_length = page_length, start=start,
             fields=["name", "reference_name", "reference_doctype"]
         )
  
@@ -343,7 +338,8 @@ def trigger_workflow_notification(doc, method):
 
                 for user in enabled_users:
                     frappe.publish_realtime(event="comment_notification",message=message,user=user)
-                    
+                
+                msg_str = f" {content} \n {doc.reference_doctype} ({doc.reference_name})"   
                 for user in enabled_users:
                     try:
                         nl = frappe.new_doc("Socket Notification List")
@@ -351,8 +347,9 @@ def trigger_workflow_notification(doc, method):
                         nl.seen = 0
                         nl.doctype_ = doc.reference_doctype
                         nl.doctype_id = doc.reference_name
-                        nl.message = str(message)
+                        nl.message = str(msg_str)
                         nl.notification_from = 'Comment'
+                        nl.comment_by = doc.comment_by
                         nl.save(ignore_permissions=True)
                     except Exception as e:
                         frappe.log_error(f"Error creating Socket Notification for {user}: {str(e)}")
@@ -394,6 +391,7 @@ def trigger_workflow_notification(doc, method):
     transitions = frappe.get_all("Workflow Transition",filters={"parent": workflow_name, "state": new_state},fields=["action"])
     actions_list = [{"action": t["action"]} for t in transitions]
     
+    ref_doc = frappe.get_doc(doc.doctype, doc.name)
     message = {
         "doctype": doc.doctype,
         "docname": doc.name,
@@ -402,7 +400,8 @@ def trigger_workflow_notification(doc, method):
     }
     for user in enabled_users:
         frappe.publish_realtime("erp_notification", message, user=user)
-
+        
+    msg_str = f"{doc.doctype} ({doc.name})\n Status : {ref_doc.workflow_state} \n Title : {getattr(ref_doc,ref_doc.title[1:-1])}"   
     for user in enabled_users:
         try:
             nl = frappe.new_doc("Socket Notification List")
@@ -411,7 +410,7 @@ def trigger_workflow_notification(doc, method):
             nl.doctype_ = doc.doctype
             nl.doctype_id = doc.name
             nl.workflow_state = new_state
-            nl.message = str(message)
+            nl.message = str(msg_str)
             nl.notification_from = 'WorkFlow Action'
             nl.save(ignore_permissions=True)
         except Exception as e:
