@@ -13,8 +13,24 @@ def triggerd_fcm_notification(fcm_token, title, body, data_payload, image=None):
     credentials = service_account.Credentials.from_service_account_info(gcp_json_credentials_dict, scopes=['https://www.googleapis.com/auth/firebase.messaging'])
     fcm = FCMNotification(service_account_file=None, credentials=credentials, project_id="erpnext-workflow-c5727")
 
+    if isinstance(data_payload, str):
+        try:
+            data_payload = frappe.parse_json(data_payload)
+        except Exception:
+            data_payload = {}
+    
+    if not isinstance(data_payload, dict):
+        data_payload = {}
+            
+    clean_payload = {}
+    for k, v in data_payload.items():
+        if isinstance(v, str):
+            clean_payload[k] = v
+        else:
+            clean_payload[k] = json.dumps(v)
+        
     fcm_token = fcm_token
     notification_title = title
     notification_body = body
     notification_image = image
-    result = fcm.notify(fcm_token=fcm_token, notification_title=notification_title, notification_body=notification_body, notification_image=notification_image, data_payload=data_payload)
+    result = fcm.notify(fcm_token=fcm_token, notification_title=notification_title, notification_body=notification_body, notification_image=notification_image, data_payload=clean_payload)
