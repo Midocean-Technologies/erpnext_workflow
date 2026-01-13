@@ -114,7 +114,6 @@ def get_document_list(reference_doctype, start, page_length, reference_name = No
             filters=filters,
             page_length=page_length,
             start=start,
-        version-14
             fields=["name", "reference_name", "reference_doctype"]
         )
 
