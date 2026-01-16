@@ -6,8 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "enabled",
-  "fcm_json_data",
-  "title_fields"
+  "fcm_json_data"
  ],
  "fields": [
   {
@@ -15,13 +14,6 @@
    "fieldname": "enabled",
    "fieldtype": "Check",
    "label": "Enabled"
-  },
-  {
-   "allow_bulk_edit": 1,
-   "fieldname": "title_fields",
-   "fieldtype": "Table",
-   "label": "Title Fields",
-   "options": "Title Fields"
   },
   {
    "fieldname": "fcm_json_data",
@@ -33,7 +25,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-01-16 14:43:19.320770",
+ "modified": "2026-01-16 17:34:27.945721",
  "modified_by": "Administrator",
  "module": "Erpnext Workflow",
  "name": "Smart Workflow Settings",
