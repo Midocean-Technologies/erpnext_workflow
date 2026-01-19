@@ -78,8 +78,8 @@ app_license = "mit"
 # 	"methods": "erpnext_workflow.utils.jinja_methods",
 # 	"filters": "erpnext_workflow.utils.jinja_filters"
 # }
-after_install = "erpnext_workflow.install.after_install"
-after_migrate = "erpnext_workflow.install.after_migrate"
+after_install = ["erpnext_workflow.install.after_install", "erpnext_workflow.mobile_api.v1.api.get_existing_document_list"]
+after_migrate = ["erpnext_workflow.install.after_migrate", "erpnext_workflow.mobile_api.v1.api.get_existing_document_list"]
 
 # Installation
 # ------------
