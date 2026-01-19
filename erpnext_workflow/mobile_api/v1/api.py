@@ -163,6 +163,39 @@ def get_document_list(reference_doctype, start, page_length, reference_name = No
         frappe.log_error(frappe.get_traceback(), "get_document_list Error")
         return gen_response(500, "Something went wrong")
 
+
+@frappe.whitelist()
+def get_existing_document_list():
+    try:
+        result = {}
+
+        workflow_list = frappe.get_all("Workflow", filters={'is_active': 1}, fields=['document_type'])
+        for i in workflow_list:
+            doctype = i.document_type
+            result.setdefault(doctype, [])
+            records = frappe.get_all(doctype, filters={"docstatus": 0}, fields=["name",'workflow_state'],limit=1000)
+            for doc in records:
+                exists = frappe.db.exists("Workflow Action",{"reference_doctype": doctype, "reference_name": doc.name})
+                if not exists:
+                    wa = frappe.get_doc({
+                        "doctype": "Workflow Action",
+                        "reference_doctype": doctype,
+                        "reference_name": doc.name,
+                        "workflow_state": doc.workflow_state,
+                        "status": "Open"
+                    })
+                    wa.insert(ignore_permissions=True)
+
+                result[doctype].append({
+                    "name": doc.name,
+                })
+        return result
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(e), "get_existing_document_list Error")
+        return []
+
+
 def get_status(status):
 	if status == 0:
 		return 'Draft'
@@ -436,30 +469,3 @@ def trigger_workflow_notification(doc, method):
 
     frappe.db.commit()
     return message   
-
-
-# @frappe.whitelist()
-# def enqueue_send_fcm_notification(enabled_users, doctype, docname):
-#     data = {
-#         'enabled_user': enabled_users,
-#         'doctype': doctype,
-#         'docname': docname
-#     }
-#     frappe.enqueue("erpnext_workflow.mobile_api.v1.api.send_fcm_notification",data=data, queue='long')
-
-# @frappe.whitelist()
-# def send_fcm_notification(data):
-#     try:
-#         for j in data.get('enabled_user'):
-#             user_fcm_token = frappe.get_value("User", j, 'user_fcm_token')
-#             if user_fcm_token:
-#                 triggerd_fcm_notification(user_fcm_token, data.get('doctype') , data.get('docname'))
-
-#     except Exception as e:
-#         frappe.log_error("FCM Notification Error", frappe.get_traceback(e))
-
-
-
-
-
-
