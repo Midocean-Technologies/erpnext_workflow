@@ -421,12 +421,12 @@ def trigger_workflow_notification(doc, method):
     for user in enabled_users:
         frappe.publish_realtime("erp_notification", message, user=user)
     
-    title = {getattr(ref_doc,ref_doc.title[1:-1])} 
     
     msg_str = f"{doc.doctype} ({doc.name})\n Status : {ref_doc.workflow_state}"
 
-    if title:
-        msg_str += f"\n Title : {title}"
+    title_field = ref_doc.meta.title_field
+    if title_field and ref_doc.get(title_field):
+        msg_str += f"\n Title : {ref_doc.get(title_field)}"
         
     for user in enabled_users:
         try:
