@@ -102,10 +102,9 @@ def get_document_list(reference_doctype, start ,  page_length, reference_name = 
         if reference_name:
             flt["reference_name"] = ("like", f"%{reference_name}%")
 
-        if title:
-            flt["name"] = ("like", f"%{title}%")
             
-        document_list = frappe.get_list("Workflow Action",filters=flt, page_length=page_length, start=start, fields=["name", "reference_name", "reference_doctype"])
+        document_list = frappe.get_list("Workflow Action",filters=flt, 
+                                        page_length=page_length, start=start, fields=["name", "reference_name", "reference_doctype"])
  
         workflow_name = frappe.db.get_value(
             "Workflow",
@@ -129,8 +128,13 @@ def get_document_list(reference_doctype, start ,  page_length, reference_name = 
                 continue
  
             doc = frappe.get_doc(row.reference_doctype, row.reference_name)
+            
+            if title and title_field:
+                doc_title = str(doc.get(title_field) or "")
+                if title.lower() not in doc_title.lower():
+                    continue
+                
             current_state = getattr(doc, workflow_state_field, "")
- 
             if workflow_state_filter and current_state != workflow_state_filter:
                 continue
  
