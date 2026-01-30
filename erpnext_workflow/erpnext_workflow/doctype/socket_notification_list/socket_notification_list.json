@@ -60,7 +60,6 @@
   {
    "fieldname": "message",
    "fieldtype": "Small Text",
-   "hidden": 1,
    "label": "Message"
   },
   {
@@ -82,7 +81,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-13 12:47:49.089454",
+ "modified": "2026-01-30 14:34:55.646820",
  "modified_by": "Administrator",
  "module": "Erpnext Workflow",
  "name": "Socket Notification List",
