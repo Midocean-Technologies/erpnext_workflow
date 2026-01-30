@@ -94,18 +94,46 @@ def get_document_list(reference_doctype, start ,  page_length, reference_name = 
  
         workflow_state_filter = frappe.form_dict.get("workflow_state")
 
-        flt = {
+        filters = {
             "status": "Open",
             "reference_doctype": reference_doctype,
         }
 
         if reference_name:
-            flt["reference_name"] = ("like", f"%{reference_name}%")
+            filters["reference_name"] = ("like", f"%{reference_name}%")
 
             
-        document_list = frappe.get_list("Workflow Action",filters=flt, 
-                                        page_length=page_length, start=start, fields=["name", "reference_name", "reference_doctype"])
- 
+        document_list = []   
+        document_list_1 = frappe.get_list(
+            "Workflow Action",
+            filters=filters,
+            page_length=page_length,
+            start=start,
+            fields=["name", "reference_name", "reference_doctype"]
+        )
+        for d1 in document_list_1:
+            document_list.append(d1)
+        
+        ref_doc_meta = frappe.get_meta(reference_doctype)
+        if ref_doc_meta.get("title_field") and title: 
+            ref_doctype_list = frappe.get_list(reference_doctype, filters={ref_doc_meta.get("title_field"): ("like", f"%{title}%")})
+            x = []
+            for i in ref_doctype_list:
+                x.append(i.name)
+            filters["reference_name"] = ['in', x]
+            
+            
+            document_list_2 = frappe.get_list(
+            "Workflow Action",
+            filters=filters,
+            page_length=page_length,
+            start=start,
+            fields=["name", "reference_name", "reference_doctype"])
+            for d2 in document_list_2:
+                if d2 not in document_list:
+                    document_list.append(d2)
+        
+        
         workflow_name = frappe.db.get_value(
             "Workflow",
             {"document_type": reference_doctype, "is_active": 1},
@@ -129,11 +157,6 @@ def get_document_list(reference_doctype, start ,  page_length, reference_name = 
  
             doc = frappe.get_doc(row.reference_doctype, row.reference_name)
             
-            if title and title_field:
-                doc_title = str(doc.get(title_field) or "")
-                if title.lower() not in doc_title.lower():
-                    continue
-                
             current_state = getattr(doc, workflow_state_field, "")
             if workflow_state_filter and current_state != workflow_state_filter:
                 continue
@@ -373,7 +396,7 @@ def trigger_workflow_notification(doc, method):
                 for user in enabled_users:
                     frappe.publish_realtime(event="comment_notification",message=message,user=user)
                 
-                msg_str = f" {content} \n {doc.reference_doctype} ({doc.reference_name})"   
+                msg_str = f"{content} \n{doc.reference_doctype} ({doc.reference_name})"   
                 for user in enabled_users:
                     try:
                         nl = frappe.new_doc("Socket Notification List")
@@ -435,11 +458,11 @@ def trigger_workflow_notification(doc, method):
         frappe.publish_realtime("erp_notification", message, user=user)
     
     
-    msg_str = f"{doc.doctype} ({doc.name})\n Status : {ref_doc.workflow_state}"
+    msg_str = f"{doc.doctype} ({doc.name})\n{ref_doc.workflow_state}"
 
     title_field = ref_doc.meta.title_field
     if title_field and ref_doc.get(title_field):
-        msg_str += f"\n Title : {ref_doc.get(title_field)}"
+        msg_str += f"\n{ref_doc.get(title_field)}"
         
     for user in enabled_users:
         try:
