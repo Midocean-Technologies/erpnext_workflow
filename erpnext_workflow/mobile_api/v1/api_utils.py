@@ -38,11 +38,18 @@ def generate_key(user):
 def mtpl_validate(methods):
     @wrapt.decorator
     def wrapper(wrapped, instance, args, kwargs):
+
         req = getattr(frappe.local, "request", None)
+
         if not req:
             return wrapped(*args, **kwargs)
-        if req.method not in methods:
-            return gen_response(500, "Invalid Request Method")
+
+        if methods and req.method not in methods:
+            frappe.local.response.http_status_code = 405
+            return {
+                "message": "Method Not Allowed"
+            }
 
         return wrapped(*args, **kwargs)
+
     return wrapper
