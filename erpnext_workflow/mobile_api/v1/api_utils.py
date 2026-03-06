@@ -34,15 +34,13 @@ def generate_key(user):
         api_key = user_details.get("api_key")
     return {"api_secret": api_secret, "api_key": api_key}
 
-
 def mtpl_validate(methods):
     @wrapt.decorator
     def wrapper(wrapped, instance, args, kwargs):
         req = getattr(frappe.local, "request", None)
         if not req:
             return wrapped(*args, **kwargs)
-        if req.method not in methods:
-            return gen_response(500, "Invalid Request Method")
-
+        if req.method.upper() not in [m.upper() for m in methods]:
+            return  
         return wrapped(*args, **kwargs)
     return wrapper
