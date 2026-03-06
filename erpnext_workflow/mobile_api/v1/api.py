@@ -91,21 +91,50 @@ def get_document_type_list(user=None):
 
 @frappe.whitelist()
 @mtpl_validate(methods=["GET"])
-def get_document_list(reference_doctype, start, page_length ,user=None):
+def get_document_list(reference_doctype, start, page_length, reference_name = None, title=None,user=None):
     try:
         lst = []
-        settings = frappe.get_single("Smart Workflow Settings")
- 
+
         workflow_state_filter = frappe.form_dict.get("workflow_state")
- 
-        document_list = frappe.get_list(
+        filters = {
+            "status": "Open",
+            "reference_doctype": reference_doctype,
+        }
+
+        if reference_name:
+            filters["reference_name"] = ("like", f"%{reference_name}%")
+
+        document_list = []   
+        document_list_1 = frappe.get_list(
             "Workflow Action",
-            filters={
-                "status": "Open",
-                "reference_doctype": reference_doctype
-            }, page_length = page_length, start=start,
+            filters=filters,
+            page_length=page_length,
+            start=start,
             fields=["name", "reference_name", "reference_doctype"]
         )
+        for d1 in document_list_1:
+            document_list.append(d1)
+        
+        ref_doc_meta = frappe.get_meta(reference_doctype)
+        if ref_doc_meta.get("title_field") and title: 
+            ref_doctype_list = frappe.get_list(reference_doctype, filters={ref_doc_meta.get("title_field"): ("like", f"%{title}%")})
+            x = []
+            for i in ref_doctype_list:
+                x.append(i.name)
+            filters["reference_name"] = ['in', x]
+            
+            
+            document_list_2 = frappe.get_list(
+            "Workflow Action",
+            filters=filters,
+            page_length=page_length,
+            start=start,
+            fields=["name", "reference_name", "reference_doctype"])
+            for d2 in document_list_2:
+                if d2 not in document_list:
+                    document_list.append(d2)
+           
+
  
         workflow_name = frappe.db.get_value(
             "Workflow",
@@ -129,8 +158,8 @@ def get_document_list(reference_doctype, start, page_length ,user=None):
                 continue
  
             doc = frappe.get_doc(row.reference_doctype, row.reference_name)
+                
             current_state = getattr(doc, workflow_state_field, "")
- 
             if workflow_state_filter and current_state != workflow_state_filter:
                 continue
  
@@ -151,6 +180,39 @@ def get_document_list(reference_doctype, start, page_length ,user=None):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "get_document_list Error")
         return gen_response(500, "Something went wrong")
+
+
+@frappe.whitelist()
+def get_existing_document_list():
+    try:
+        result = {}
+
+        workflow_list = frappe.get_all("Workflow", filters={'is_active': 1}, fields=['document_type'])
+        for i in workflow_list:
+            doctype = i.document_type
+            result.setdefault(doctype, [])
+            records = frappe.get_all(doctype, filters={"docstatus": 0}, fields=["name",'workflow_state'],limit=1000)
+            for doc in records:
+                exists = frappe.db.exists("Workflow Action",{"reference_doctype": doctype, "reference_name": doc.name})
+                if not exists:
+                    wa = frappe.get_doc({
+                        "doctype": "Workflow Action",
+                        "reference_doctype": doctype,
+                        "reference_name": doc.name,
+                        "workflow_state": doc.workflow_state,
+                        "status": "Open"
+                    })
+                    wa.insert(ignore_permissions=True)
+
+                result[doctype].append({
+                    "name": doc.name,
+                })
+        return result
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(e), "get_existing_document_list Error")
+        return []
+
 
 def get_status(status):
 	if status == 0:
@@ -343,7 +405,8 @@ def trigger_workflow_notification(doc, method):
 
                 for user in enabled_users:
                     frappe.publish_realtime(event="comment_notification",message=message,user=user)
-                    
+                
+                msg_str = f" {content} \n {doc.reference_doctype} ({doc.reference_name})"   
                 for user in enabled_users:
                     try:
                         nl = frappe.new_doc("Socket Notification List")
@@ -351,8 +414,10 @@ def trigger_workflow_notification(doc, method):
                         nl.seen = 0
                         nl.doctype_ = doc.reference_doctype
                         nl.doctype_id = doc.reference_name
-                        nl.message = str(message)
+                        nl.message = str(msg_str)
+                        nl.json = str(message)
                         nl.notification_from = 'Comment'
+                        nl.comment_by = doc.comment_by
                         nl.save(ignore_permissions=True)
                     except Exception as e:
                         frappe.log_error(f"Error creating Socket Notification for {user}: {str(e)}")
@@ -394,6 +459,7 @@ def trigger_workflow_notification(doc, method):
     transitions = frappe.get_all("Workflow Transition",filters={"parent": workflow_name, "state": new_state},fields=["action"])
     actions_list = [{"action": t["action"]} for t in transitions]
     
+    ref_doc = frappe.get_doc(doc.doctype, doc.name)
     message = {
         "doctype": doc.doctype,
         "docname": doc.name,
@@ -402,7 +468,14 @@ def trigger_workflow_notification(doc, method):
     }
     for user in enabled_users:
         frappe.publish_realtime("erp_notification", message, user=user)
+        
+    # msg_str = f"{doc.doctype} ({doc.name})\n Status : {ref_doc.workflow_state} \n Title : {getattr(ref_doc,ref_doc.title[1:-1])}"  
+    msg_str = f"{doc.doctype} ({doc.name})\n{ref_doc.workflow_state}"
 
+    title_field = ref_doc.meta.title_field
+    if title_field and ref_doc.get(title_field):
+        msg_str += f"\n{ref_doc.get(title_field)}"
+         
     for user in enabled_users:
         try:
             nl = frappe.new_doc("Socket Notification List")
@@ -411,7 +484,8 @@ def trigger_workflow_notification(doc, method):
             nl.doctype_ = doc.doctype
             nl.doctype_id = doc.name
             nl.workflow_state = new_state
-            nl.message = str(message)
+            nl.message = str(msg_str)
+            nl.json = str(message)
             nl.notification_from = 'WorkFlow Action'
             nl.save(ignore_permissions=True)
         except Exception as e:
@@ -419,30 +493,3 @@ def trigger_workflow_notification(doc, method):
 
     frappe.db.commit()
     return message   
-
-
-# @frappe.whitelist()
-# def enqueue_send_fcm_notification(enabled_users, doctype, docname):
-#     data = {
-#         'enabled_user': enabled_users,
-#         'doctype': doctype,
-#         'docname': docname
-#     }
-#     frappe.enqueue("erpnext_workflow.mobile_api.v1.api.send_fcm_notification",data=data, queue='long')
-
-# @frappe.whitelist()
-# def send_fcm_notification(data):
-#     try:
-#         for j in data.get('enabled_user'):
-#             user_fcm_token = frappe.get_value("User", j, 'user_fcm_token')
-#             if user_fcm_token:
-#                 triggerd_fcm_notification(user_fcm_token, data.get('doctype') , data.get('docname'))
-
-#     except Exception as e:
-#         frappe.log_error("FCM Notification Error", frappe.get_traceback(e))
-
-
-
-
-
-
