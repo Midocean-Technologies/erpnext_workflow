@@ -34,6 +34,7 @@ def generate_key(user):
         api_key = user_details.get("api_key")
     return {"api_secret": api_secret, "api_key": api_key}
 
+
 def mtpl_validate(methods):
     @wrapt.decorator
     def wrapper(wrapped, instance, args, kwargs):
