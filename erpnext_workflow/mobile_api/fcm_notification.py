@@ -27,9 +27,21 @@ def triggerd_fcm_notification(fcm_token, title, body, data_payload, image=None):
             clean_payload[k] = v
         else:
             clean_payload[k] = json.dumps(v)
+
+    apns_config = {
+        "headers": {
+            "apns-priority": "10"
+        },
+        "payload": {
+            "aps": {
+                "sound": "default",
+                "badge": 1
+            }
+        }
+    }        
         
     fcm_token = fcm_token
     notification_title = title
     notification_body = body
     notification_image = image
-    result = fcm.notify(fcm_token=fcm_token, notification_title=notification_title, notification_body=notification_body, notification_image=notification_image, data_payload=clean_payload)
+    result = fcm.notify(fcm_token=fcm_token, notification_title=notification_title, notification_body=notification_body, notification_image=notification_image, data_payload=clean_payload, apns_config=apns_config)
