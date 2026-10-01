@@ -350,9 +350,10 @@ def store_fcm_token(user, token):
     except Exception as e:
         raise e
 
-@frappe.whitelist()
-@mtpl_validate(methods=["POST"])
+# @frappe.whitelist()
+# @mtpl_validate(methods=["POST"])
 def trigger_workflow_notification(doc, method):
+    
     if doc.doctype == "Comment":
         try:
             if doc.comment_type == "Comment":
