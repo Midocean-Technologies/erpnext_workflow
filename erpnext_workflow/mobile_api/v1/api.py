@@ -60,7 +60,7 @@ def login(usr, pwd):
 @mtpl_validate(methods=["GET"])
 def get_document_type_list(user=None):
     try:
-        active_workflows = frappe.get_all(
+        active_workflows = frappe.get_list(
             "Workflow",
             filters={"is_active": 1},
             fields=["document_type"]
@@ -185,11 +185,11 @@ def get_existing_document_list():
     try:
         result = {}
 
-        workflow_list = frappe.get_all("Workflow", filters={'is_active': 1}, fields=['document_type'])
+        workflow_list = frappe.get_list("Workflow", filters={'is_active': 1}, fields=['document_type'])
         for i in workflow_list:
             doctype = i.document_type
             result.setdefault(doctype, [])
-            records = frappe.get_all(doctype, filters={"docstatus": 0}, fields=["name",'workflow_state'],limit=1000)
+            records = frappe.get_list(doctype, filters={"docstatus": 0}, fields=["name",'workflow_state'],limit=1000)
             for doc in records:
                 exists = frappe.db.exists("Workflow Action",{"reference_doctype": doctype, "reference_name": doc.name})
                 if not exists:
@@ -263,7 +263,7 @@ def get_workflow_action(reference_doctype, reference_name):
 def get_print_format(reference_doctype, reference_name):
     try:
         print_format_name = "Standard"
-        workflow_list = frappe.get_all("Workflow",filters={'document_type': reference_doctype, 'is_active': 1}, fields=['print_format'])
+        workflow_list = frappe.get_list("Workflow",filters={'document_type': reference_doctype, 'is_active': 1}, fields=['print_format'])
         for i in workflow_list:
             if i.print_format:
                 print_format_name = i.print_format
@@ -444,7 +444,7 @@ def trigger_workflow_notification(doc, method):
     if not enabled_users:
         return
 
-    transitions = frappe.get_all("Workflow Transition",filters={"parent": workflow_name, "state": new_state},fields=["action"])
+    transitions = frappe.get_list("Workflow Transition",filters={"parent": workflow_name, "state": new_state},fields=["action"])
     actions_list = [{"action": t["action"]} for t in transitions]
 
     ref_doc = frappe.get_doc(doc.doctype, doc.name)

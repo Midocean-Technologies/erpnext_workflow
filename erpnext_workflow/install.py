@@ -87,7 +87,7 @@ def role_for_socket_notification_list():
             print(f"Error: DocType '{DOCTYPE}' does not exist")
             return
         
-        existing_perms = frappe.get_all(
+        existing_perms = frappe.get_list(
             "Custom DocPerm",
             filters={"parent": DOCTYPE, "role": ROLE_NAME},
             pluck="name"
