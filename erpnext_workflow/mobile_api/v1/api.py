@@ -60,7 +60,7 @@ def login(usr, pwd):
 @mtpl_validate(methods=["GET"])
 def get_document_type_list(user=None):
     try:
-        active_workflows = frappe.get_all(
+        active_workflows = frappe.get_list(
             "Workflow",
             filters={"is_active": 1},
             fields=["document_type"]
@@ -68,7 +68,7 @@ def get_document_type_list(user=None):
 
         workflow_doctypes = {w.document_type for w in active_workflows}
 
-        doc = frappe.get_all(
+        doc = frappe.get_list(
             "Workflow Action",
             filters={
                 "status": "Open",
@@ -104,7 +104,7 @@ def get_document_list(reference_doctype, start ,  page_length, reference_name = 
 
             
         document_list = []   
-        document_list_1 = frappe.get_all(
+        document_list_1 = frappe.get_list(
             "Workflow Action",
             filters=filters,
             page_length=page_length,
@@ -116,14 +116,14 @@ def get_document_list(reference_doctype, start ,  page_length, reference_name = 
         
         ref_doc_meta = frappe.get_meta(reference_doctype)
         if ref_doc_meta.get("title_field") and title: 
-            ref_doctype_list = frappe.get_all(reference_doctype, filters={ref_doc_meta.get("title_field"): ("like", f"%{title}%")})
+            ref_doctype_list = frappe.get_list(reference_doctype, filters={ref_doc_meta.get("title_field"): ("like", f"%{title}%")})
             x = []
             for i in ref_doctype_list:
                 x.append(i.name)
             filters["reference_name"] = ['in', x]
             
             
-            document_list_2 = frappe.get_all(
+            document_list_2 = frappe.get_list(
             "Workflow Action",
             filters=filters,
             page_length=page_length,
@@ -185,11 +185,11 @@ def get_existing_document_list():
     try:
         result = {}
 
-        workflow_list = frappe.get_all("Workflow", filters={'is_active': 1}, fields=['document_type'])
+        workflow_list = frappe.get_list("Workflow", filters={'is_active': 1}, fields=['document_type'])
         for i in workflow_list:
             doctype = i.document_type
             result.setdefault(doctype, [])
-            records = frappe.get_all(doctype, filters={"docstatus": 0}, fields=["name",'workflow_state'],limit=1000)
+            records = frappe.get_list(doctype, filters={"docstatus": 0}, fields=["name",'workflow_state'],limit=1000)
             for doc in records:
                 exists = frappe.db.exists("Workflow Action",{"reference_doctype": doctype, "reference_name": doc.name})
                 if not exists:
@@ -228,7 +228,7 @@ def get_document_list_5_record(user=None):
     try:
         lst = []
 	
-        document_list = frappe.get_all('Workflow Action', filters={'status': 'Open'}, fields=['name', 'reference_name', 'reference_doctype'], limit_page_length=5)
+        document_list = frappe.get_list('Workflow Action', filters={'status': 'Open'}, fields=['name', 'reference_name', 'reference_doctype'], limit_page_length=5)
         for row in document_list:
             docc = {}
             if frappe.db.exists(row.reference_doctype, row.reference_name):
@@ -263,7 +263,7 @@ def get_workflow_action(reference_doctype, reference_name):
 def get_print_format(reference_doctype, reference_name):
     try:
         print_format_name = "Standard"
-        workflow_list = frappe.get_all("Workflow",filters={'document_type': reference_doctype, 'is_active': 1}, fields=['print_format'])
+        workflow_list = frappe.get_list("Workflow",filters={'document_type': reference_doctype, 'is_active': 1}, fields=['print_format'])
         for i in workflow_list:
             if i.print_format:
                 print_format_name = i.print_format
