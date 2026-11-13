@@ -26,6 +26,11 @@
 
 <img width="1292" height="616" alt="Workflow List" src="https://github.com/user-attachments/assets/d28d4e23-2efb-490c-bdb9-366b06a9831f" />
 
+- Set Dynamic Print format
+  
+<img width="1365" height="587" alt="Screenshot 2025-12-23 at 5 01 55 PM" src="https://github.com/user-attachments/assets/2d2990a1-9cb2-4e74-b67a-ee64ef50b8cb" />
+
+
 
 
 ### Installation Video Link
