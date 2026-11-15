@@ -5,6 +5,35 @@ from erpnext_workflow.mobile_api.v1.api_utils import *
 from frappe.model.workflow import get_transitions, get_workflow, apply_workflow
 import re
 from frappe.utils.user import get_users_with_role
+from frappe.workflow.doctype.workflow_action.workflow_action import create_workflow_actions_for_roles, is_workflow_action_already_created
+
+# At the workflow step whose transition condition uses this field (e.g. `frappe.session.user == doc.leave_approver`),
+# only that user gets the notification and sees the document in the mobile app
+APPROVER_FIELDS = {"Expense Claim": "expense_approver", "Leave Application": "leave_approver"}
+
+
+def mobile_app_workflow_filters():
+    """Workflows are used in the mobile app only when "Send Mobile App Notification" is ticked"""
+    filters = {"is_active": 1}
+    if frappe.get_meta("Workflow").has_field("send_mobile_app_notification"):
+        filters["send_mobile_app_notification"] = 1
+    return filters
+
+
+def is_approver_step(doctype, workflow_name, state):
+    field = APPROVER_FIELDS.get(doctype)
+    return bool(field and frappe.db.exists("Workflow Transition", {"parent": workflow_name, "state": state, "condition": ["like", f"%{field}%"]}))
+
+
+def is_hidden_for_user(doctype, name):
+    """In the mobile app lists, a document at the approver step is shown only to its approver"""
+    if doctype not in APPROVER_FIELDS:
+        return False
+    workflow = get_workflow(doctype)
+    state, approver = frappe.db.get_value(doctype, name, [workflow.workflow_state_field, APPROVER_FIELDS[doctype]]) or (None, None)
+    return is_approver_step(doctype, workflow.name, state) and approver != frappe.session.user
+
+
 def get_frappe_version() -> str:
     return getattr(frappe, "__version__", "unknown")
 
@@ -62,7 +91,7 @@ def get_document_type_list(user=None):
     try:
         active_workflows = frappe.get_all(
             "Workflow",
-            filters={"is_active": 1},
+            filters=mobile_app_workflow_filters(),
             fields=["document_type"]
         )
 
@@ -76,6 +105,7 @@ def get_document_type_list(user=None):
             },
             fields=["name", "reference_name", "reference_doctype"]
         )
+        doc = [d for d in doc if not is_hidden_for_user(d.reference_doctype, d.reference_name)]
 
         return gen_response(200, "Data Fetch Successfully", doc)
 
@@ -91,7 +121,10 @@ def get_document_list(reference_doctype, start ,  page_length, reference_name = 
     try:
         lst = []
         settings = frappe.get_single("Smart Workflow Settings")
- 
+
+        if not frappe.db.exists("Workflow", {"document_type": reference_doctype, **mobile_app_workflow_filters()}):
+            return gen_response(200, "Data Fetched Successfully", lst)
+
         workflow_state_filter = frappe.form_dict.get("workflow_state")
 
         filters = {
@@ -152,9 +185,9 @@ def get_document_list(reference_doctype, start ,  page_length, reference_name = 
         title_field = meta.title_field
  
         for row in document_list:
-            if not frappe.db.exists(row.reference_doctype, row.reference_name):
+            if not frappe.db.exists(row.reference_doctype, row.reference_name) or is_hidden_for_user(row.reference_doctype, row.reference_name):
                 continue
- 
+
             doc = frappe.get_doc(row.reference_doctype, row.reference_name)
             
             current_state = getattr(doc, workflow_state_field, "")
@@ -228,15 +261,16 @@ def get_document_list_5_record(user=None):
     try:
         lst = []
 	
-        document_list = frappe.get_list('Workflow Action', filters={'status': 'Open'}, fields=['name', 'reference_name', 'reference_doctype'], limit_page_length=5)
+        workflow_doctypes = frappe.get_all("Workflow", filters=mobile_app_workflow_filters(), pluck="document_type")
+        document_list = frappe.get_list('Workflow Action', filters={'status': 'Open', 'reference_doctype': ['in', workflow_doctypes]}, fields=['name', 'reference_name', 'reference_doctype'], limit_page_length=5)
         for row in document_list:
             docc = {}
-            if frappe.db.exists(row.reference_doctype, row.reference_name):
+            if frappe.db.exists(row.reference_doctype, row.reference_name) and not is_hidden_for_user(row.reference_doctype, row.reference_name):
                 doc = frappe.get_doc(row.reference_doctype, row.reference_name)
                 docc['reference_doctype'] = row.reference_doctype
                 docc['reference_name'] = row.reference_name
-                docc['workflow_state'] = doc.workflow_state
-                docc['title'] = doc.title
+                docc['workflow_state'] = doc.get("workflow_state")
+                docc['title'] = doc.get(doc.meta.title_field or "title") or doc.name
                 docc['status'] = get_status(doc.docstatus)
                 lst.append(docc)
         gen_response(200 ,"Data Fetch Succesfully", lst)
@@ -371,7 +405,7 @@ def trigger_workflow_notification(doc, method):
                     "reference_name": doc.reference_name,
                     "content": content,
                 }
-                workflow_name = frappe.db.get_value("Workflow",{"document_type": doc.reference_doctype, "is_active": 1},"name")
+                workflow_name = frappe.db.get_value("Workflow",{"document_type": doc.reference_doctype, **mobile_app_workflow_filters()},"name")
                 if not workflow_name:
                     return
 
@@ -391,6 +425,8 @@ def trigger_workflow_notification(doc, method):
                 users = frappe.db.get_all("Has Role",filters={"role": current_role},fields=["parent as user"])
 
                 enabled_users = [u.user for u in users if frappe.db.get_value("User", u.user, "enabled") and u.user != current_user]
+                if is_approver_step(doc.reference_doctype, workflow_name, current_state):
+                    enabled_users = [u for u in enabled_users if u == ref_doc.get(APPROVER_FIELDS[doc.reference_doctype])]
                 if not enabled_users:
                     return
 
@@ -420,7 +456,7 @@ def trigger_workflow_notification(doc, method):
             return
         
     
-    workflow_name = frappe.db.get_value("Workflow",{"document_type": doc.doctype, "is_active": 1}, "name")
+    workflow_name = frappe.db.get_value("Workflow",{"document_type": doc.doctype, **mobile_app_workflow_filters()}, "name")
     if not workflow_name:
         return
 
@@ -435,12 +471,20 @@ def trigger_workflow_notification(doc, method):
     if not new_state or old_state == new_state:
         return
 
+    approver_step = is_approver_step(doc.doctype, workflow_name, new_state)
+    if approver_step and not is_workflow_action_already_created(doc):
+        # Frappe checks the approver condition as the user who moved the document (e.g. the employee), so it creates
+        # no Workflow Action for this step. Create it, so the approver sees the document in the mobile app lists.
+        create_workflow_actions_for_roles({t.allowed for t in get_workflow(doc.doctype).transitions if t.state == new_state}, doc)
+
     current_role = frappe.db.get_value("Workflow Document State",{"parent": workflow_name, "state": new_state},"allow_edit")
     if not current_role:
         return
 
     users = frappe.db.get_all("Has Role",filters={"role": current_role},fields=["parent as user"])
     enabled_users = [u.user for u in users if frappe.db.get_value("User", u.user, "enabled")]
+    if approver_step:
+        enabled_users = [u for u in enabled_users if u == doc.get(APPROVER_FIELDS[doc.doctype])]
     if not enabled_users:
         return
 
